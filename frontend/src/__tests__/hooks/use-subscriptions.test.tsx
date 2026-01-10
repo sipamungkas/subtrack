@@ -88,7 +88,7 @@ describe('useSubscriptionStats', () => {
     })
 
     expect(result.current.data?.totalSubscriptions).toBe(mockStats.totalSubscriptions)
-    expect(result.current.data?.totalMonthlyCost).toBe(mockStats.totalMonthlyCost)
+    expect(result.current.data?.monthlyCost.amount).toBe(mockStats.monthlyCost.amount)
     expect(result.current.data?.upcomingRenewals).toHaveLength(2)
   })
 })

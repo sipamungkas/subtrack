@@ -6,8 +6,8 @@ interface AuthContextType {
   user: UserProfile | null
   isLoading: boolean
   isAuthenticated: boolean
-  signIn: (email: string, password: string) => Promise<void>
-  signUp: (name: string, email: string, password: string) => Promise<void>
+  signIn: (email: string, password: string, captchaToken?: string) => Promise<void>
+  signUp: (name: string, email: string, password: string, captchaToken?: string) => Promise<void>
   signOut: () => Promise<void>
   refreshUser: () => Promise<void>
 }
@@ -44,23 +44,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     checkSession()
   }, [refreshUser])
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string, captchaToken?: string) => {
+    const headers: Record<string, string> = {}
+
+    // Add CAPTCHA token if provided
+    if (captchaToken) {
+      headers['x-captcha-response'] = captchaToken
+    }
+
     const response = await api.post('/api/auth/sign-in/email', {
       email,
       password,
-    })
+    }, { headers })
 
     if (response.data) {
       await refreshUser()
     }
   }
 
-  const signUp = async (name: string, email: string, password: string) => {
+  const signUp = async (name: string, email: string, password: string, captchaToken?: string) => {
+    const headers: Record<string, string> = {}
+
+    // Add CAPTCHA token if provided
+    if (captchaToken) {
+      headers['x-captcha-response'] = captchaToken
+    }
+
     const response = await api.post('/api/auth/sign-up/email', {
       name,
       email,
       password,
-    })
+    }, { headers })
 
     if (response.data) {
       await refreshUser()

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '../test-utils'
 import userEvent from '@testing-library/user-event'
 import { LoginPage } from '@/pages/LoginPage'
@@ -14,6 +14,15 @@ vi.mock('react-router-dom', async () => {
     useNavigate: () => mockNavigate,
   }
 })
+
+// Mock Turnstile component to auto-verify
+vi.mock('@/components/ui/turnstile', () => ({
+  Turnstile: ({ onVerify }: { onVerify: (token: string) => void }) => {
+    // Auto-trigger verification on mount
+    setTimeout(() => onVerify('test-captcha-token'), 0)
+    return <div data-testid="turnstile-mock">CAPTCHA Mock</div>
+  },
+}))
 
 describe('LoginPage', () => {
   beforeEach(() => {

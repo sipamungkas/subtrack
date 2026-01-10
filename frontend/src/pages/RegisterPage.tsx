@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { Turnstile } from '@/components/ui/turnstile'
 import { toast } from '@/hooks/use-toast'
 import { CreditCard, ArrowRight, Loader2, Check } from 'lucide-react'
 
@@ -19,16 +20,45 @@ export function RegisterPage() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
   const { signUp } = useAuth()
 
+  const handleCaptchaVerify = (token: string) => {
+    setCaptchaToken(token)
+  }
+
+  const handleCaptchaError = () => {
+    setCaptchaToken(null)
+    toast({
+      title: 'CAPTCHA Error',
+      description: 'Failed to verify CAPTCHA. Please refresh and try again.',
+      variant: 'destructive',
+    })
+  }
+
+  const handleCaptchaExpire = () => {
+    setCaptchaToken(null)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    // Validate CAPTCHA token
+    if (!captchaToken) {
+      toast({
+        title: 'Verification Required',
+        description: 'Please complete the security check',
+        variant: 'destructive',
+      })
+      return
+    }
+
     setIsLoading(true)
 
     try {
-      await signUp(name, email, password)
+      await signUp(name, email, password, captchaToken)
       toast({ title: 'Welcome!', description: 'Account created successfully' })
       navigate('/dashboard')
     } catch (error: unknown) {
@@ -38,6 +68,8 @@ export function RegisterPage() {
         description: err.response?.data?.message || 'Failed to create account',
         variant: 'destructive',
       })
+      // Reset captcha on error so user can retry
+      setCaptchaToken(null)
     } finally {
       setIsLoading(false)
     }
@@ -118,7 +150,19 @@ export function RegisterPage() {
                 ))}
               </div>
 
-              <Button type="submit" className="w-full gap-2" disabled={isLoading}>
+              {/* Turnstile CAPTCHA */}
+              <Turnstile
+                onVerify={handleCaptchaVerify}
+                onError={handleCaptchaError}
+                onExpire={handleCaptchaExpire}
+                className="flex justify-center"
+              />
+
+              <Button
+                type="submit"
+                className="w-full gap-2"
+                disabled={isLoading || !captchaToken}
+              >
                 {isLoading ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
