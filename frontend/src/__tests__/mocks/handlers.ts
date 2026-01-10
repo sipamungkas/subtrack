@@ -56,8 +56,20 @@ export const mockSubscriptions: Subscription[] = [
 
 export const mockStats: SubscriptionStats = {
   totalSubscriptions: 2,
-  totalMonthlyCost: '25.98',
+  monthlyCost: {
+    amount: 25.98,
+    currency: 'USD',
+  },
+  yearlyCost: {
+    amount: 311.76,
+    currency: 'USD',
+  },
+  upcomingRenewalsCount: 2,
   upcomingRenewals: mockSubscriptions,
+  costBreakdown: [
+    { currency: 'USD', amount: 25.98, convertedToUSD: 25.98 },
+  ],
+  ratesUpdatedAt: '2026-01-10T02:00:00.000Z',
 }
 
 export const mockAdminStats: AdminStats = {

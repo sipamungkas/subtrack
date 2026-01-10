@@ -34,9 +34,11 @@ import {
   Trash2,
   AlertTriangle,
   Send,
+  TrendingUp,
+  Coins,
 } from "lucide-react";
 import { useState } from "react";
-import type { Subscription } from "@/types";
+import type { Subscription, CostBreakdown } from "@/types";
 
 function getDaysUntilRenewal(renewalDate: string): number {
   const today = new Date();
@@ -229,7 +231,7 @@ export function DashboardPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="glass border-border/50">
           <CardHeader className="pb-2">
             <CardDescription className="flex items-center gap-2">
@@ -248,13 +250,29 @@ export function DashboardPage() {
           <CardHeader className="pb-2">
             <CardDescription className="flex items-center gap-2">
               <DollarSign className="h-4 w-4" />
-              Total Cost
+              Monthly Cost
             </CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-4xl font-bold">
-              ${parseFloat(stats?.totalMonthlyCost || "0").toFixed(2)}
+              ${stats?.monthlyCost?.amount?.toFixed(2) || "0.00"}
             </p>
+            <p className="text-xs text-muted-foreground">USD equivalent</p>
+          </CardContent>
+        </Card>
+
+        <Card className="glass border-border/50">
+          <CardHeader className="pb-2">
+            <CardDescription className="flex items-center gap-2">
+              <TrendingUp className="h-4 w-4" />
+              Yearly Cost
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-4xl font-bold">
+              ${stats?.yearlyCost?.amount?.toFixed(2) || "0.00"}
+            </p>
+            <p className="text-xs text-muted-foreground">USD equivalent</p>
           </CardContent>
         </Card>
 
@@ -267,12 +285,56 @@ export function DashboardPage() {
           </CardHeader>
           <CardContent>
             <p className="text-4xl font-bold">
-              {stats?.upcomingRenewals?.length || 0}
+              {stats?.upcomingRenewalsCount || 0}
             </p>
             <p className="text-xs text-muted-foreground">Next 30 days</p>
           </CardContent>
         </Card>
       </div>
+
+      {/* Currency Breakdown */}
+      {stats?.costBreakdown && stats.costBreakdown.length > 1 && (
+        <Card className="glass border-border/50">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Coins className="h-5 w-5" />
+              Cost by Currency
+            </CardTitle>
+            <CardDescription>
+              Your subscriptions across different currencies
+              {stats.ratesUpdatedAt && (
+                <span className="ml-2 text-xs">
+                  (Rates updated: {new Date(stats.ratesUpdatedAt).toLocaleDateString()})
+                </span>
+              )}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              {stats.costBreakdown.map((item: CostBreakdown) => (
+                <div
+                  key={item.currency}
+                  className="p-3 rounded-lg bg-muted/50 border border-border/50"
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <Badge variant="outline" className="font-mono">
+                      {item.currency}
+                    </Badge>
+                  </div>
+                  <p className="text-lg font-semibold">
+                    {item.currency === "USD" ? "$" : ""}{item.amount.toFixed(2)}
+                  </p>
+                  {item.currency !== "USD" && (
+                    <p className="text-xs text-muted-foreground">
+                      ≈ ${item.convertedToUSD.toFixed(2)} USD
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Subscriptions List */}
       <Card className="glass border-border/50">

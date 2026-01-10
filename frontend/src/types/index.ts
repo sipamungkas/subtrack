@@ -15,10 +15,26 @@ export interface Subscription {
   updatedAt: string
 }
 
+export interface CostBreakdown {
+  currency: string
+  amount: number
+  convertedToUSD: number
+}
+
 export interface SubscriptionStats {
   totalSubscriptions: number
-  totalMonthlyCost: string
+  monthlyCost: {
+    amount: number
+    currency: string
+  }
+  yearlyCost: {
+    amount: number
+    currency: string
+  }
+  upcomingRenewalsCount: number
   upcomingRenewals: Subscription[]
+  costBreakdown: CostBreakdown[]
+  ratesUpdatedAt: string | null
 }
 
 export interface User {

@@ -44,7 +44,8 @@ describe('DashboardPage', () => {
 
     await waitFor(() => {
       expect(screen.getByText(/total subscriptions/i)).toBeInTheDocument()
-      expect(screen.getByText(/total cost/i)).toBeInTheDocument()
+      expect(screen.getByText(/monthly cost/i)).toBeInTheDocument()
+      expect(screen.getByText(/yearly cost/i)).toBeInTheDocument()
       expect(screen.getByText(/upcoming renewals/i)).toBeInTheDocument()
     })
   })
