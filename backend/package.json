@@ -3,6 +3,13 @@
   "module": "src/index.ts",
   "type": "module",
   "private": true,
+  "scripts": {
+    "dev": "bun --watch src/index.ts",
+    "build": "bun build src/index.ts --outdir dist --target bun",
+    "start": "bun dist/index.js",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit push"
+  },
   "devDependencies": {
     "@types/bun": "latest",
     "@types/node": "^25.0.3"
