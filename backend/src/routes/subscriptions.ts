@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { db } from '../db';
 import { subscriptions, users } from '../db/schema';
 import { requireAuth } from '../middleware/auth';
-import { eq, and, gte, sql, count } from 'drizzle-orm';
+import { eq, and, gte, sql, count, sum } from 'drizzle-orm';
 import { subscriptionQuerySchema, createSubscriptionSchema, updateSubscriptionSchema } from '../validators/subscription';
 
 const subscriptionRouter = new Hono();
@@ -138,6 +138,68 @@ subscriptionRouter.put('/:id', async (c) => {
     .returning();
 
   return c.json({ data: updated });
+});
+
+// DELETE /api/subscriptions/:id - Soft delete subscription
+subscriptionRouter.delete('/:id', async (c) => {
+  const user = c.get('user');
+  const id = c.req.param('id');
+
+  // Check subscription exists and belongs to user
+  const existing = await db
+    .select()
+    .from(subscriptions)
+    .where(and(eq(subscriptions.id, id), eq(subscriptions.userId, user.id)))
+    .limit(1);
+
+  if (existing.length === 0) {
+    return c.json({ error: 'NOT_FOUND', message: 'Subscription not found' }, 404);
+  }
+
+  await db
+    .update(subscriptions)
+    .set({ isActive: false, updatedAt: new Date() })
+    .where(eq(subscriptions.id, id));
+
+  return c.json({ message: 'Subscription deleted successfully' });
+});
+
+// GET /api/subscriptions/stats - Get user's subscription statistics
+subscriptionRouter.get('/stats', async (c) => {
+  const user = c.get('user');
+
+  const [stats] = await db
+    .select({
+      totalCount: count(),
+      totalCost: sum(subscriptions.cost),
+    })
+    .from(subscriptions)
+    .where(and(eq(subscriptions.userId, user.id), eq(subscriptions.isActive, true)));
+
+  // Get upcoming renewals (next 30 days)
+  const thirtyDaysFromNow = new Date();
+  thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+
+  const upcomingRenewals = await db
+    .select()
+    .from(subscriptions)
+    .where(
+      and(
+        eq(subscriptions.userId, user.id),
+        eq(subscriptions.isActive, true),
+        gte(subscriptions.renewalDate, new Date().toISOString().split('T')[0])
+      )
+    )
+    .orderBy(subscriptions.renewalDate)
+    .limit(5);
+
+  return c.json({
+    data: {
+      totalSubscriptions: stats.totalCount || 0,
+      totalMonthlyCost: stats.totalCost || '0',
+      upcomingRenewals,
+    }
+  });
 });
 
 export default subscriptionRouter;
