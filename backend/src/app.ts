@@ -4,6 +4,7 @@ import { logger } from 'hono/logger';
 import authRouter from './routes/auth';
 import subscriptionRouter from './routes/subscriptions';
 import userRouter from './routes/user';
+import telegramRouter from './routes/telegram';
 
 const app = new Hono();
 
@@ -21,5 +22,6 @@ app.get('/health', (c) => c.json({ status: 'ok' }));
 app.route('/api/auth', authRouter);
 app.route('/api/subscriptions', subscriptionRouter);
 app.route('/api/user', userRouter);
+app.route('/api/telegram', telegramRouter);
 
 export default app;
