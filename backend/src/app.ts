@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
+import authRouter from './routes/auth';
 
 const app = new Hono();
 
@@ -14,7 +15,7 @@ app.use('*', cors({
 // Health check
 app.get('/health', (c) => c.json({ status: 'ok' }));
 
-// API routes will be added here
-app.get('/api', (c) => c.json({ message: 'SubTrack API' }));
+// Routes
+app.route('/api/auth', authRouter);
 
 export default app;
