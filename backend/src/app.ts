@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import authRouter from './routes/auth';
+import subscriptionRouter from './routes/subscriptions';
 
 const app = new Hono();
 
@@ -17,5 +18,6 @@ app.get('/health', (c) => c.json({ status: 'ok' }));
 
 // Routes
 app.route('/api/auth', authRouter);
+app.route('/api/subscriptions', subscriptionRouter);
 
 export default app;
