@@ -56,6 +56,83 @@ subscriptionRouter.get("/", async (c) => {
   return c.json({ data: userSubscriptions });
 });
 
+// GET /api/subscriptions/stats - Get user's subscription statistics with currency conversion
+// NOTE: This route MUST be defined before /:id to avoid "stats" being matched as an id
+subscriptionRouter.get("/stats", async (c) => {
+  const user = c.get("user");
+
+  // Get all active subscriptions for the user
+  const userSubscriptions = await db
+    .select()
+    .from(subscriptions)
+    .where(
+      and(
+        eq(subscriptions.userId, user.id),
+        eq(subscriptions.isActive, true)
+      )
+    );
+
+  // Calculate costs with currency conversion
+  const costBreakdown: Array<{
+    currency: string;
+    amount: number;
+    convertedToUSD: number;
+  }> = [];
+
+  // Group subscriptions by currency
+  const byCurrency: Record<string, number> = {};
+  for (const sub of userSubscriptions) {
+    const currency = sub.currency || "USD";
+    const cost = parseFloat(sub.cost);
+    byCurrency[currency] = (byCurrency[currency] || 0) + cost;
+  }
+
+  // Convert each currency to USD
+  let totalMonthlyCostUSD = 0;
+  for (const [currency, amount] of Object.entries(byCurrency)) {
+    const convertedToUSD = await convertAmount(amount, currency, "USD");
+    costBreakdown.push({
+      currency,
+      amount,
+      convertedToUSD: Math.round(convertedToUSD * 100) / 100,
+    });
+    totalMonthlyCostUSD += convertedToUSD;
+  }
+
+  // Get upcoming renewals (next 30 days)
+  const today = new Date();
+  const thirtyDaysFromNow = new Date();
+  thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+
+  const upcomingRenewals = userSubscriptions.filter((sub) => {
+    const renewalDate = new Date(sub.renewalDate);
+    return renewalDate >= today && renewalDate <= thirtyDaysFromNow;
+  }).sort((a, b) =>
+    new Date(a.renewalDate).getTime() - new Date(b.renewalDate).getTime()
+  ).slice(0, 5);
+
+  // Get exchange rates info
+  const { updatedAt: ratesUpdatedAt } = await getAllLatestRates();
+
+  return c.json({
+    data: {
+      totalSubscriptions: userSubscriptions.length,
+      monthlyCost: {
+        amount: Math.round(totalMonthlyCostUSD * 100) / 100,
+        currency: "USD",
+      },
+      yearlyCost: {
+        amount: Math.round(totalMonthlyCostUSD * 12 * 100) / 100,
+        currency: "USD",
+      },
+      upcomingRenewalsCount: upcomingRenewals.length,
+      upcomingRenewals,
+      costBreakdown,
+      ratesUpdatedAt: ratesUpdatedAt?.toISOString() || null,
+    },
+  });
+});
+
 // GET /api/subscriptions/:id - Get single subscription
 subscriptionRouter.get("/:id", async (c) => {
   const user = c.get("user");
@@ -202,82 +279,6 @@ subscriptionRouter.delete("/:id", async (c) => {
     .where(eq(subscriptions.id, id));
 
   return c.json({ message: "Subscription deleted successfully" });
-});
-
-// GET /api/subscriptions/stats - Get user's subscription statistics with currency conversion
-subscriptionRouter.get("/stats", async (c) => {
-  const user = c.get("user");
-
-  // Get all active subscriptions for the user
-  const userSubscriptions = await db
-    .select()
-    .from(subscriptions)
-    .where(
-      and(
-        eq(subscriptions.userId, user.id),
-        eq(subscriptions.isActive, true)
-      )
-    );
-
-  // Calculate costs with currency conversion
-  const costBreakdown: Array<{
-    currency: string;
-    amount: number;
-    convertedToUSD: number;
-  }> = [];
-
-  // Group subscriptions by currency
-  const byCurrency: Record<string, number> = {};
-  for (const sub of userSubscriptions) {
-    const currency = sub.currency || "USD";
-    const cost = parseFloat(sub.cost);
-    byCurrency[currency] = (byCurrency[currency] || 0) + cost;
-  }
-
-  // Convert each currency to USD
-  let totalMonthlyCostUSD = 0;
-  for (const [currency, amount] of Object.entries(byCurrency)) {
-    const convertedToUSD = await convertAmount(amount, currency, "USD");
-    costBreakdown.push({
-      currency,
-      amount,
-      convertedToUSD: Math.round(convertedToUSD * 100) / 100,
-    });
-    totalMonthlyCostUSD += convertedToUSD;
-  }
-
-  // Get upcoming renewals (next 30 days)
-  const today = new Date();
-  const thirtyDaysFromNow = new Date();
-  thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
-
-  const upcomingRenewals = userSubscriptions.filter((sub) => {
-    const renewalDate = new Date(sub.renewalDate);
-    return renewalDate >= today && renewalDate <= thirtyDaysFromNow;
-  }).sort((a, b) =>
-    new Date(a.renewalDate).getTime() - new Date(b.renewalDate).getTime()
-  ).slice(0, 5);
-
-  // Get exchange rates info
-  const { updatedAt: ratesUpdatedAt } = await getAllLatestRates();
-
-  return c.json({
-    data: {
-      totalSubscriptions: userSubscriptions.length,
-      monthlyCost: {
-        amount: Math.round(totalMonthlyCostUSD * 100) / 100,
-        currency: "USD",
-      },
-      yearlyCost: {
-        amount: Math.round(totalMonthlyCostUSD * 12 * 100) / 100,
-        currency: "USD",
-      },
-      upcomingRenewalsCount: upcomingRenewals.length,
-      upcomingRenewals,
-      costBreakdown,
-      ratesUpdatedAt: ratesUpdatedAt?.toISOString() || null,
-    },
-  });
 });
 
 // POST /api/subscriptions/:id/test-notification - Send test notification for subscription
