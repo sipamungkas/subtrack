@@ -1,36 +1,48 @@
-import { Hono } from 'hono';
-import { db } from '../db';
-import { subscriptions, users } from '../db/schema';
-import { requireAuth } from '../middleware/auth';
-import { eq, and, gte, sql, count, sum } from 'drizzle-orm';
-import { subscriptionQuerySchema, createSubscriptionSchema, updateSubscriptionSchema } from '../validators/subscription';
+import { Hono } from "hono";
+import { db } from "../db";
+import { subscriptions, users } from "../db/schema";
+import { requireAuth } from "../middleware/auth";
+import { eq, and, gte, sql, count, sum } from "drizzle-orm";
+import {
+  subscriptionQuerySchema,
+  createSubscriptionSchema,
+  updateSubscriptionSchema,
+} from "../validators/subscription";
 
 const subscriptionRouter = new Hono();
 
 // All routes require authentication
-subscriptionRouter.use('*', requireAuth);
+subscriptionRouter.use("*", requireAuth);
 
 // GET /api/subscriptions - List user's subscriptions
-subscriptionRouter.get('/', async (c) => {
-  const user = c.get('user');
+subscriptionRouter.get("/", async (c) => {
+  const user = c.get("user");
   const query = subscriptionQuerySchema.safeParse(c.req.query());
 
   if (!query.success) {
-    return c.json({ error: 'VALIDATION_ERROR', message: query.error.message }, 400);
+    return c.json(
+      { error: "VALIDATION_ERROR", message: query.error.message },
+      400
+    );
   }
 
   let conditions = [eq(subscriptions.userId, user.id)];
 
-  if (query.data.active === 'true') {
+  if (query.data.active === "true") {
     conditions.push(eq(subscriptions.isActive, true));
-  } else if (query.data.active === 'false') {
+  } else if (query.data.active === "false") {
     conditions.push(eq(subscriptions.isActive, false));
   }
 
-  if (query.data.upcoming === 'true') {
+  if (query.data.upcoming === "true") {
     const thirtyDaysFromNow = new Date();
     thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
-    conditions.push(gte(subscriptions.renewalDate, thirtyDaysFromNow.toISOString().split('T')[0]));
+    conditions.push(
+      gte(
+        subscriptions.renewalDate,
+        thirtyDaysFromNow.toISOString().split("T")[0]
+      )
+    );
   }
 
   const userSubscriptions = await db
@@ -43,9 +55,9 @@ subscriptionRouter.get('/', async (c) => {
 });
 
 // GET /api/subscriptions/:id - Get single subscription
-subscriptionRouter.get('/:id', async (c) => {
-  const user = c.get('user');
-  const id = c.req.param('id');
+subscriptionRouter.get("/:id", async (c) => {
+  const user = c.get("user");
+  const id = c.req.param("id");
 
   const subscription = await db
     .select()
@@ -54,40 +66,57 @@ subscriptionRouter.get('/:id', async (c) => {
     .limit(1);
 
   if (subscription.length === 0) {
-    return c.json({ error: 'NOT_FOUND', message: 'Subscription not found' }, 404);
+    return c.json(
+      { error: "NOT_FOUND", message: "Subscription not found" },
+      404
+    );
   }
 
   return c.json({ data: subscription[0] });
 });
 
 // POST /api/subscriptions - Create new subscription
-subscriptionRouter.post('/', async (c) => {
-  const user = c.get('user');
+subscriptionRouter.post("/", async (c) => {
+  const user = c.get("user");
   const body = await c.req.json();
 
   const validation = createSubscriptionSchema.safeParse(body);
 
   if (!validation.success) {
-    return c.json({
-      error: 'VALIDATION_ERROR',
-      message: validation.error.message,
-      details: validation.error.errors
-    }, 400);
+    return c.json(
+      {
+        error: "VALIDATION_ERROR",
+        message: validation.error.message,
+        details: validation.error.errors,
+      },
+      400
+    );
   }
 
   // Check subscription limit
-  const [userRecord] = await db.select().from(users).where(eq(users.id, user.id));
+  const [userRecord] = await db
+    .select()
+    .from(users)
+    .where(eq(users.id, user.id));
   const [subCount] = await db
     .select({ count: count() })
     .from(subscriptions)
-    .where(and(eq(subscriptions.userId, user.id), eq(subscriptions.isActive, true)));
+    .where(
+      and(eq(subscriptions.userId, user.id), eq(subscriptions.isActive, true))
+    );
 
   if (subCount.count >= userRecord.subscriptionLimit) {
-    return c.json({
-      error: 'SUBSCRIPTION_LIMIT_REACHED',
-      message: `You've reached your limit of ${userRecord.subscriptionLimit} subscriptions`,
-      details: { current: subCount.count, limit: userRecord.subscriptionLimit }
-    }, 403);
+    return c.json(
+      {
+        error: "SUBSCRIPTION_LIMIT_REACHED",
+        message: `You've reached your limit of ${userRecord.subscriptionLimit} subscriptions`,
+        details: {
+          current: subCount.count,
+          limit: userRecord.subscriptionLimit,
+        },
+      },
+      403
+    );
   }
 
   const [newSubscription] = await db
@@ -102,19 +131,22 @@ subscriptionRouter.post('/', async (c) => {
 });
 
 // PUT /api/subscriptions/:id - Update subscription
-subscriptionRouter.put('/:id', async (c) => {
-  const user = c.get('user');
-  const id = c.req.param('id');
+subscriptionRouter.put("/:id", async (c) => {
+  const user = c.get("user");
+  const id = c.req.param("id");
   const body = await c.req.json();
 
   const validation = updateSubscriptionSchema.safeParse(body);
 
   if (!validation.success) {
-    return c.json({
-      error: 'VALIDATION_ERROR',
-      message: validation.error.message,
-      details: validation.error.errors
-    }, 400);
+    return c.json(
+      {
+        error: "VALIDATION_ERROR",
+        message: validation.error.message,
+        details: validation.error.errors,
+      },
+      400
+    );
   }
 
   // Check subscription exists and belongs to user
@@ -125,7 +157,10 @@ subscriptionRouter.put('/:id', async (c) => {
     .limit(1);
 
   if (existing.length === 0) {
-    return c.json({ error: 'NOT_FOUND', message: 'Subscription not found' }, 404);
+    return c.json(
+      { error: "NOT_FOUND", message: "Subscription not found" },
+      404
+    );
   }
 
   const [updated] = await db
@@ -141,9 +176,9 @@ subscriptionRouter.put('/:id', async (c) => {
 });
 
 // DELETE /api/subscriptions/:id - Soft delete subscription
-subscriptionRouter.delete('/:id', async (c) => {
-  const user = c.get('user');
-  const id = c.req.param('id');
+subscriptionRouter.delete("/:id", async (c) => {
+  const user = c.get("user");
+  const id = c.req.param("id");
 
   // Check subscription exists and belongs to user
   const existing = await db
@@ -153,7 +188,10 @@ subscriptionRouter.delete('/:id', async (c) => {
     .limit(1);
 
   if (existing.length === 0) {
-    return c.json({ error: 'NOT_FOUND', message: 'Subscription not found' }, 404);
+    return c.json(
+      { error: "NOT_FOUND", message: "Subscription not found" },
+      404
+    );
   }
 
   await db
@@ -161,12 +199,12 @@ subscriptionRouter.delete('/:id', async (c) => {
     .set({ isActive: false, updatedAt: new Date() })
     .where(eq(subscriptions.id, id));
 
-  return c.json({ message: 'Subscription deleted successfully' });
+  return c.json({ message: "Subscription deleted successfully" });
 });
 
 // GET /api/subscriptions/stats - Get user's subscription statistics
-subscriptionRouter.get('/stats', async (c) => {
-  const user = c.get('user');
+subscriptionRouter.get("/stats", async (c) => {
+  const user = c.get("user");
 
   const [stats] = await db
     .select({
@@ -174,7 +212,9 @@ subscriptionRouter.get('/stats', async (c) => {
       totalCost: sum(subscriptions.cost),
     })
     .from(subscriptions)
-    .where(and(eq(subscriptions.userId, user.id), eq(subscriptions.isActive, true)));
+    .where(
+      and(eq(subscriptions.userId, user.id), eq(subscriptions.isActive, true))
+    );
 
   // Get upcoming renewals (next 30 days)
   const thirtyDaysFromNow = new Date();
@@ -187,7 +227,7 @@ subscriptionRouter.get('/stats', async (c) => {
       and(
         eq(subscriptions.userId, user.id),
         eq(subscriptions.isActive, true),
-        gte(subscriptions.renewalDate, new Date().toISOString().split('T')[0])
+        gte(subscriptions.renewalDate, new Date().toISOString().split("T")[0])
       )
     )
     .orderBy(subscriptions.renewalDate)
@@ -196,10 +236,67 @@ subscriptionRouter.get('/stats', async (c) => {
   return c.json({
     data: {
       totalSubscriptions: stats.totalCount || 0,
-      totalMonthlyCost: stats.totalCost || '0',
+      totalMonthlyCost: stats.totalCost || "0",
       upcomingRenewals,
-    }
+    },
   });
+});
+
+// POST /api/subscriptions/:id/test-notification - Send test notification for subscription
+subscriptionRouter.post("/:id/test-notification", async (c) => {
+  const user = c.get("user");
+  const id = c.req.param("id");
+  const { sendTelegramMessage } = await import("../lib/telegram");
+
+  // Check subscription exists and belongs to user
+  const [subscription] = await db
+    .select({
+      id: subscriptions.id,
+      serviceName: subscriptions.serviceName,
+      userId: subscriptions.userId,
+    })
+    .from(subscriptions)
+    .where(and(eq(subscriptions.id, id), eq(subscriptions.userId, user.id)))
+    .limit(1);
+
+  if (!subscription) {
+    return c.json(
+      { error: "NOT_FOUND", message: "Subscription not found" },
+      404
+    );
+  }
+
+  // Get user's telegram chat ID
+  const [userRecord] = await db
+    .select({ telegramChatId: users.telegramChatId })
+    .from(users)
+    .where(eq(users.id, user.id));
+
+  if (!userRecord.telegramChatId) {
+    return c.json(
+      {
+        error: "NOT_CONNECTED",
+        message:
+          "Telegram not connected. Please connect your Telegram account in settings.",
+      },
+      400
+    );
+  }
+
+  const message = `🔔 *Test Notification*\n\nThis is a test reminder for your *${subscription.serviceName}* subscription.`;
+  const success = await sendTelegramMessage(userRecord.telegramChatId, message);
+
+  if (!success) {
+    return c.json(
+      {
+        error: "SEND_FAILED",
+        message: "Failed to send Telegram message",
+      },
+      500
+    );
+  }
+
+  return c.json({ message: "Test notification sent successfully" });
 });
 
 export default subscriptionRouter;

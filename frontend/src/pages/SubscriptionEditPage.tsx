@@ -1,54 +1,69 @@
-import { useState, useEffect } from 'react'
-import { useNavigate, useParams, Link } from 'react-router-dom'
-import { useSubscription, useUpdateSubscription } from '@/hooks/use-subscriptions'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { toast } from '@/hooks/use-toast'
-import { ArrowLeft, Loader2, Save } from 'lucide-react'
+import { useState, useEffect } from "react";
+import { useNavigate, useParams, Link } from "react-router-dom";
+import {
+  useSubscription,
+  useUpdateSubscription,
+} from "@/hooks/use-subscriptions";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { toast } from "@/hooks/use-toast";
+import { ArrowLeft, Loader2, Save } from "lucide-react";
 
 const billingCycles = [
-  { value: 'monthly', label: 'Monthly' },
-  { value: 'yearly', label: 'Yearly' },
-  { value: 'quarterly', label: 'Quarterly' },
-  { value: 'custom', label: 'Custom' },
-]
+  { value: "monthly", label: "Monthly" },
+  { value: "yearly", label: "Yearly" },
+  { value: "quarterly", label: "Quarterly" },
+  { value: "custom", label: "Custom" },
+];
 
 const currencies = [
-  { value: 'USD', label: 'USD ($)' },
-  { value: 'EUR', label: 'EUR (€)' },
-  { value: 'GBP', label: 'GBP (£)' },
-  { value: 'IDR', label: 'IDR (Rp)' },
-]
+  { value: "USD", label: "USD ($)" },
+  { value: "EUR", label: "EUR (€)" },
+  { value: "GBP", label: "GBP (£)" },
+  { value: "IDR", label: "IDR (Rp)" },
+];
 
 const reminderOptions = [
-  { value: 1, label: '1 day before' },
-  { value: 3, label: '3 days before' },
-  { value: 7, label: '7 days before' },
-  { value: 14, label: '14 days before' },
-  { value: 30, label: '30 days before' },
-]
+  { value: 1, label: "1 day before" },
+  { value: 3, label: "3 days before" },
+  { value: 7, label: "7 days before" },
+  { value: 14, label: "14 days before" },
+  { value: 30, label: "30 days before" },
+];
 
 export function SubscriptionEditPage() {
-  const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
-  const { data: subscription, isLoading } = useSubscription(id!)
-  const updateSubscription = useUpdateSubscription()
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { data: subscription, isLoading } = useSubscription(id!);
+  const updateSubscription = useUpdateSubscription();
 
   const [formData, setFormData] = useState({
-    serviceName: '',
-    renewalDate: '',
-    cost: '',
-    currency: 'USD',
-    billingCycle: 'monthly' as 'monthly' | 'yearly' | 'quarterly' | 'custom',
-    paymentMethod: '',
-    accountName: '',
+    serviceName: "",
+    renewalDate: "",
+    cost: "",
+    currency: "USD",
+    billingCycle: "monthly" as "monthly" | "yearly" | "quarterly" | "custom",
+    paymentMethod: "",
+    accountName: "",
     reminderDays: [7, 3, 1] as number[],
-    notes: '',
-  })
+    notes: "",
+  });
 
   useEffect(() => {
     if (subscription) {
@@ -61,27 +76,31 @@ export function SubscriptionEditPage() {
         paymentMethod: subscription.paymentMethod,
         accountName: subscription.accountName,
         reminderDays: subscription.reminderDays,
-        notes: subscription.notes || '',
-      })
+        notes: subscription.notes || "",
+      });
     }
-  }, [subscription])
+  }, [subscription]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     try {
-      await updateSubscription.mutateAsync({ id: id!, ...formData })
-      toast({ title: 'Success', description: 'Subscription updated successfully' })
-      navigate('/dashboard')
-    } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } } }
+      await updateSubscription.mutateAsync({ id: id!, ...formData });
       toast({
-        title: 'Error',
-        description: err.response?.data?.message || 'Failed to update subscription',
-        variant: 'destructive',
-      })
+        title: "Success",
+        description: "Subscription updated successfully",
+      });
+      navigate("/dashboard");
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
+      toast({
+        title: "Error",
+        description:
+          err.response?.data?.message || "Failed to update subscription",
+        variant: "destructive",
+      });
     }
-  }
+  };
 
   const toggleReminder = (days: number) => {
     setFormData((prev) => ({
@@ -89,15 +108,15 @@ export function SubscriptionEditPage() {
       reminderDays: prev.reminderDays.includes(days)
         ? prev.reminderDays.filter((d) => d !== days)
         : [...prev.reminderDays, days].sort((a, b) => b - a),
-    }))
-  }
+    }));
+  };
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
-    )
+    );
   }
 
   if (!subscription) {
@@ -108,7 +127,7 @@ export function SubscriptionEditPage() {
           <Button className="mt-4">Back to Dashboard</Button>
         </Link>
       </div>
-    )
+    );
   }
 
   return (
@@ -122,14 +141,18 @@ export function SubscriptionEditPage() {
         </Link>
         <div>
           <h1 className="text-2xl font-bold">Edit Subscription</h1>
-          <p className="text-muted-foreground">Update {subscription.serviceName}</p>
+          <p className="text-muted-foreground">
+            Update {subscription.serviceName}
+          </p>
         </div>
       </div>
 
       <Card className="glass border-border/50">
         <CardHeader>
           <CardTitle>Subscription Details</CardTitle>
-          <CardDescription>Update the details of your subscription</CardDescription>
+          <CardDescription>
+            Update the details of your subscription
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -140,7 +163,12 @@ export function SubscriptionEditPage() {
                 id="serviceName"
                 placeholder="Netflix, Spotify, GitHub Pro..."
                 value={formData.serviceName}
-                onChange={(e) => setFormData((prev) => ({ ...prev, serviceName: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    serviceName: e.target.value,
+                  }))
+                }
                 required
                 className="bg-background/50"
               />
@@ -157,7 +185,9 @@ export function SubscriptionEditPage() {
                   min="0"
                   placeholder="9.99"
                   value={formData.cost}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, cost: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, cost: e.target.value }))
+                  }
                   required
                   className="bg-background/50"
                 />
@@ -165,8 +195,10 @@ export function SubscriptionEditPage() {
               <div className="space-y-2">
                 <Label htmlFor="currency">Currency</Label>
                 <Select
-                  value={formData.currency}
-                  onValueChange={(value) => setFormData((prev) => ({ ...prev, currency: value }))}
+                  value={formData.currency || "USD"}
+                  onValueChange={(value) =>
+                    setFormData((prev) => ({ ...prev, currency: value }))
+                  }
                 >
                   <SelectTrigger className="bg-background/50">
                     <SelectValue />
@@ -188,7 +220,12 @@ export function SubscriptionEditPage() {
                 <Label htmlFor="billingCycle">Billing Cycle</Label>
                 <Select
                   value={formData.billingCycle}
-                  onValueChange={(value) => setFormData((prev) => ({ ...prev, billingCycle: value as typeof formData.billingCycle }))}
+                  onValueChange={(value) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      billingCycle: value as typeof formData.billingCycle,
+                    }))
+                  }
                 >
                   <SelectTrigger className="bg-background/50">
                     <SelectValue />
@@ -208,7 +245,12 @@ export function SubscriptionEditPage() {
                   id="renewalDate"
                   type="date"
                   value={formData.renewalDate}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, renewalDate: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      renewalDate: e.target.value,
+                    }))
+                  }
                   required
                   className="bg-background/50"
                 />
@@ -222,7 +264,12 @@ export function SubscriptionEditPage() {
                 id="paymentMethod"
                 placeholder="Visa ending 1234, PayPal, Bank Transfer..."
                 value={formData.paymentMethod}
-                onChange={(e) => setFormData((prev) => ({ ...prev, paymentMethod: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    paymentMethod: e.target.value,
+                  }))
+                }
                 required
                 className="bg-background/50"
               />
@@ -235,7 +282,12 @@ export function SubscriptionEditPage() {
                 id="accountName"
                 placeholder="your-email@example.com"
                 value={formData.accountName}
-                onChange={(e) => setFormData((prev) => ({ ...prev, accountName: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    accountName: e.target.value,
+                  }))
+                }
                 required
                 className="bg-background/50"
               />
@@ -249,7 +301,11 @@ export function SubscriptionEditPage() {
                   <Button
                     key={option.value}
                     type="button"
-                    variant={formData.reminderDays.includes(option.value) ? 'default' : 'outline'}
+                    variant={
+                      formData.reminderDays.includes(option.value)
+                        ? "default"
+                        : "outline"
+                    }
                     size="sm"
                     onClick={() => toggleReminder(option.value)}
                     className="transition-all"
@@ -270,7 +326,9 @@ export function SubscriptionEditPage() {
                 id="notes"
                 placeholder="Any additional notes..."
                 value={formData.notes}
-                onChange={(e) => setFormData((prev) => ({ ...prev, notes: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, notes: e.target.value }))
+                }
                 className="bg-background/50"
               />
             </div>
@@ -282,7 +340,11 @@ export function SubscriptionEditPage() {
                   Cancel
                 </Button>
               </Link>
-              <Button type="submit" className="flex-1 gap-2" disabled={updateSubscription.isPending}>
+              <Button
+                type="submit"
+                className="flex-1 gap-2"
+                disabled={updateSubscription.isPending}
+              >
                 {updateSubscription.isPending ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -300,5 +362,5 @@ export function SubscriptionEditPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
