@@ -130,14 +130,15 @@ describe('Bot Commands', () => {
         telegramChatId: '123456',
       };
 
-      mockDb.select.mockReturnValue(mockDb);
-      mockDb.from.mockReturnValue(mockDb);
-      mockDb.where.mockReturnValue(mockDb);
-      mockDb.limit.mockResolvedValue([mockUser]);
+      // Mock the select chain
+      mockDb.select.mockReturnValueOnce(mockDb);
+      mockDb.from.mockReturnValueOnce(mockDb);
+      mockDb.where.mockReturnValueOnce({ limit: vi.fn().mockResolvedValue([mockUser]) });
 
-      mockDb.update.mockReturnValue(mockDb);
-      mockDb.set.mockReturnValue(mockDb);
-      mockDb.where.mockResolvedValue({});
+      // Mock the update chain
+      mockDb.update.mockReturnValueOnce(mockDb);
+      mockDb.set.mockReturnValueOnce(mockDb);
+      mockDb.where.mockResolvedValueOnce({});
 
       const mockCtx: any = {
         chat: { id: 123456 },

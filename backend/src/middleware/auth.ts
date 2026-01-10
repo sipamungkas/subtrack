@@ -14,11 +14,16 @@ export const requireAuth = async (c: Context, next: Next) => {
 };
 
 export const requireAdmin = async (c: Context, next: Next) => {
-  await requireAuth(c, next);
+  const authResult = await requireAuth(c, async () => {});
+
+  // If requireAuth returned a response (unauthorized), return it
+  if (authResult) {
+    return authResult;
+  }
 
   const user = c.get('user');
 
-  if (user.role !== 'admin') {
+  if (!user || user.role !== 'admin') {
     return c.json({ error: 'FORBIDDEN', message: 'Admin access required' }, 403);
   }
 

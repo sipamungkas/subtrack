@@ -30,13 +30,16 @@ describe('Auth Middleware', () => {
 
       mockGetSession.mockResolvedValue(mockSession);
 
-      const ctx = createMockContext();
+      const setFn = vi.fn();
+      const ctx = createMockContext({
+        set: setFn,
+      });
       const next = vi.fn();
 
       await requireAuth(ctx, next);
 
-      expect(ctx.set).toHaveBeenCalledWith('user', mockSession.user);
-      expect(ctx.set).toHaveBeenCalledWith('session', mockSession.session);
+      expect(setFn).toHaveBeenCalledWith('user', mockSession.user);
+      expect(setFn).toHaveBeenCalledWith('session', mockSession.session);
       expect(next).toHaveBeenCalled();
     });
 
@@ -76,8 +79,10 @@ describe('Auth Middleware', () => {
       mockGetSession.mockResolvedValue(mockSession);
 
       const userData = { role: 'admin' };
+      const setFn = vi.fn();
       const ctx = createMockContext({
         get: (key: string) => (key === 'user' ? userData : null),
+        set: setFn,
       });
       const next = vi.fn();
 
@@ -95,10 +100,23 @@ describe('Auth Middleware', () => {
       mockGetSession.mockResolvedValue(mockSession);
 
       const userData = { role: 'user' };
+      const setFn = vi.fn();
       const ctx = createMockContext({
         get: (key: string) => (key === 'user' ? userData : null),
+        set: setFn,
       });
       const next = vi.fn();
+
+      // requireAdmin calls requireAuth first, which sets the user
+      // We need to make ctx.get return the user after it's been set
+      let storedUser: any = null;
+      ctx.get = (key: string) => {
+        if (key === 'user') return storedUser || userData;
+        return null;
+      };
+      ctx.set = (key: string, value: any) => {
+        if (key === 'user') storedUser = value;
+      };
 
       const result = await requireAdmin(ctx, next);
 

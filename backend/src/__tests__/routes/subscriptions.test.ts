@@ -22,7 +22,11 @@ vi.mock('../../db', () => ({
 }));
 
 vi.mock('../../middleware/auth', () => ({
-  requireAuth: (c: any, next: any) => next(),
+  requireAuth: async (c: any, next: any) => {
+    // Mock user context
+    c.set('user', { id: 'user-1', email: 'test@example.com', role: 'user' });
+    await next();
+  },
 }));
 
 import subscriptionRouter from '../../routes/subscriptions';
