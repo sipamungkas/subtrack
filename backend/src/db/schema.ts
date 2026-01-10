@@ -129,6 +129,16 @@ export const telegramVerifications = pgTable("telegram_verifications", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// Currency exchange rates table
+export const currencyRates = pgTable("currency_rates", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  baseCurrency: varchar("base_currency", { length: 10 }).notNull().default("USD"),
+  targetCurrency: varchar("target_currency", { length: 10 }).notNull(),
+  rate: decimal("rate", { precision: 20, scale: 10 }).notNull(),
+  fetchedAt: timestamp("fetched_at").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   subscriptions: many(subscriptions),

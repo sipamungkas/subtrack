@@ -1,4 +1,6 @@
 import { Hono } from "hono";
+import { formatReminderMessage } from "../services/notifications";
+import { convertAmount, getAllLatestRates } from "../services/currency";
 import { db } from "../db";
 import { subscriptions, users } from "../db/schema";
 import { requireAuth } from "../middleware/auth";
@@ -202,42 +204,78 @@ subscriptionRouter.delete("/:id", async (c) => {
   return c.json({ message: "Subscription deleted successfully" });
 });
 
-// GET /api/subscriptions/stats - Get user's subscription statistics
+// GET /api/subscriptions/stats - Get user's subscription statistics with currency conversion
 subscriptionRouter.get("/stats", async (c) => {
   const user = c.get("user");
 
-  const [stats] = await db
-    .select({
-      totalCount: count(),
-      totalCost: sum(subscriptions.cost),
-    })
-    .from(subscriptions)
-    .where(
-      and(eq(subscriptions.userId, user.id), eq(subscriptions.isActive, true))
-    );
-
-  // Get upcoming renewals (next 30 days)
-  const thirtyDaysFromNow = new Date();
-  thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
-
-  const upcomingRenewals = await db
+  // Get all active subscriptions for the user
+  const userSubscriptions = await db
     .select()
     .from(subscriptions)
     .where(
       and(
         eq(subscriptions.userId, user.id),
-        eq(subscriptions.isActive, true),
-        gte(subscriptions.renewalDate, new Date().toISOString().split("T")[0])
+        eq(subscriptions.isActive, true)
       )
-    )
-    .orderBy(subscriptions.renewalDate)
-    .limit(5);
+    );
+
+  // Calculate costs with currency conversion
+  const costBreakdown: Array<{
+    currency: string;
+    amount: number;
+    convertedToUSD: number;
+  }> = [];
+
+  // Group subscriptions by currency
+  const byCurrency: Record<string, number> = {};
+  for (const sub of userSubscriptions) {
+    const currency = sub.currency || "USD";
+    const cost = parseFloat(sub.cost);
+    byCurrency[currency] = (byCurrency[currency] || 0) + cost;
+  }
+
+  // Convert each currency to USD
+  let totalMonthlyCostUSD = 0;
+  for (const [currency, amount] of Object.entries(byCurrency)) {
+    const convertedToUSD = await convertAmount(amount, currency, "USD");
+    costBreakdown.push({
+      currency,
+      amount,
+      convertedToUSD: Math.round(convertedToUSD * 100) / 100,
+    });
+    totalMonthlyCostUSD += convertedToUSD;
+  }
+
+  // Get upcoming renewals (next 30 days)
+  const today = new Date();
+  const thirtyDaysFromNow = new Date();
+  thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+
+  const upcomingRenewals = userSubscriptions.filter((sub) => {
+    const renewalDate = new Date(sub.renewalDate);
+    return renewalDate >= today && renewalDate <= thirtyDaysFromNow;
+  }).sort((a, b) =>
+    new Date(a.renewalDate).getTime() - new Date(b.renewalDate).getTime()
+  ).slice(0, 5);
+
+  // Get exchange rates info
+  const { updatedAt: ratesUpdatedAt } = await getAllLatestRates();
 
   return c.json({
     data: {
-      totalSubscriptions: stats.totalCount || 0,
-      totalMonthlyCost: stats.totalCost || "0",
+      totalSubscriptions: userSubscriptions.length,
+      monthlyCost: {
+        amount: Math.round(totalMonthlyCostUSD * 100) / 100,
+        currency: "USD",
+      },
+      yearlyCost: {
+        amount: Math.round(totalMonthlyCostUSD * 12 * 100) / 100,
+        currency: "USD",
+      },
+      upcomingRenewalsCount: upcomingRenewals.length,
       upcomingRenewals,
+      costBreakdown,
+      ratesUpdatedAt: ratesUpdatedAt?.toISOString() || null,
     },
   });
 });
@@ -250,11 +288,7 @@ subscriptionRouter.post("/:id/test-notification", async (c) => {
 
   // Check subscription exists and belongs to user
   const [subscription] = await db
-    .select({
-      id: subscriptions.id,
-      serviceName: subscriptions.serviceName,
-      userId: subscriptions.userId,
-    })
+    .select()
     .from(subscriptions)
     .where(and(eq(subscriptions.id, id), eq(subscriptions.userId, user.id)))
     .limit(1);
@@ -283,7 +317,17 @@ subscriptionRouter.post("/:id/test-notification", async (c) => {
     );
   }
 
-  const message = `🔔 *Test Notification*\n\nThis is a test reminder for your *${subscription.serviceName}* subscription.`;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const renewalDate = new Date(subscription.renewalDate);
+  const daysUntilRenewal = Math.ceil(
+    (renewalDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+  );
+
+  const message = formatReminderMessage(
+    subscription as typeof subscriptions.$inferSelect,
+    daysUntilRenewal
+  );
   const success = await sendTelegramMessage(userRecord.telegramChatId, message);
 
   if (!success) {

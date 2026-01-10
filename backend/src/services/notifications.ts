@@ -1,7 +1,7 @@
-import { db } from '../db';
-import { subscriptions, users, notificationLogs } from '../db/schema';
-import { eq, and, sql, lte, inArray } from 'drizzle-orm';
-import { sendTelegramMessage } from '../lib/telegram';
+import { db } from "../db";
+import { subscriptions, users, notificationLogs } from "../db/schema";
+import { eq, and, sql, lte, inArray } from "drizzle-orm";
+import { sendTelegramMessage } from "../lib/telegram";
 
 interface SubscriptionWithUser {
   subscription: typeof subscriptions.$inferSelect;
@@ -9,7 +9,7 @@ interface SubscriptionWithUser {
 }
 
 export async function sendSubscriptionReminders(): Promise<void> {
-  console.log('🔔 Running subscription reminder check...');
+  console.log("🔔 Running subscription reminder check...");
 
   try {
     const today = new Date();
@@ -69,8 +69,8 @@ export async function sendSubscriptionReminders(): Promise<void> {
       // Log notification
       await db.insert(notificationLogs).values({
         subscriptionId: subscription.id,
-        notificationType: 'telegram',
-        status: success ? 'sent' : 'failed',
+        notificationType: "telegram",
+        status: success ? "sent" : "failed",
         daysBefore: daysUntilRenewal,
       });
 
@@ -81,26 +81,31 @@ export async function sendSubscriptionReminders(): Promise<void> {
       }
 
       // Small delay to avoid rate limits
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
 
     console.log(`✅ Reminders sent: ${sentCount}, Failed: ${failedCount}`);
   } catch (error) {
-    console.error('❌ Error sending reminders:', error);
+    console.error("❌ Error sending reminders:", error);
   }
 }
 
-function formatReminderMessage(
+export function formatReminderMessage(
   subscription: typeof subscriptions.$inferSelect,
   daysUntilRenewal: number
 ): string {
-  const emoji = daysUntilRenewal <= 1 ? '🚨' : daysUntilRenewal <= 3 ? '⚠️' : '🔔';
+  const emoji =
+    daysUntilRenewal <= 1 ? "🚨" : daysUntilRenewal <= 3 ? "⚠️" : "🔔";
 
-  return `${emoji} *Subscription Reminder*\n\n` +
+  return (
+    `${emoji} *Subscription Reminder*\n\n` +
     `📌 *Service:* ${subscription.serviceName}\n` +
-    `⏰ *Renews in:* ${daysUntilRenewal} day${daysUntilRenewal !== 1 ? 's' : ''}\n` +
+    `⏰ *Renews in:* ${daysUntilRenewal} day${
+      daysUntilRenewal !== 1 ? "s" : ""
+    }\n` +
     `💵 *Cost:* ${subscription.currency} ${subscription.cost}\n` +
     `💳 *Payment:* ${subscription.paymentMethod}\n` +
     `👤 *Account:* ${subscription.accountName}\n` +
-    (subscription.notes ? `\n📝 *Notes:* ${subscription.notes}` : '');
+    (subscription.notes ? `\n📝 *Notes:* ${subscription.notes}` : "")
+  );
 }

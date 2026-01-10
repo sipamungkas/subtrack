@@ -6,6 +6,7 @@ import subscriptionRouter from './routes/subscriptions';
 import userRouter from './routes/user';
 import telegramRouter from './routes/telegram';
 import adminRouter from './routes/admin';
+import currenciesRouter from './routes/currencies';
 
 const app = new Hono();
 
@@ -25,5 +26,6 @@ app.route('/api/subscriptions', subscriptionRouter);
 app.route('/api/user', userRouter);
 app.route('/api/telegram', telegramRouter);
 app.route('/api/admin', adminRouter);
+app.route('/api/currencies', currenciesRouter);
 
 export default app;

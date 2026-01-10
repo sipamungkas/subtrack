@@ -1,6 +1,6 @@
-import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { useAuth } from '@/lib/auth'
-import { Button } from '@/components/ui/button'
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "@/lib/auth";
+import { Button } from "@/components/ui/button";
 import {
   LayoutDashboard,
   User,
@@ -8,29 +8,29 @@ import {
   LogOut,
   Menu,
   X,
-  CreditCard
-} from 'lucide-react'
-import { useState } from 'react'
+  CreditCard,
+} from "lucide-react";
+import { useState } from "react";
 
 export function Navbar() {
-  const { user, isAuthenticated, signOut } = useAuth()
-  const location = useLocation()
-  const navigate = useNavigate()
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const { user, isAuthenticated, signOut } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleSignOut = async () => {
-    await signOut()
-    navigate('/login')
-  }
+    await signOut();
+    navigate("/login");
+  };
 
-  const isActive = (path: string) => location.pathname === path
+  const isActive = (path: string) => location.pathname === path;
 
   const navLinkClass = (path: string) =>
     `flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
       isActive(path)
-        ? 'bg-primary/10 text-primary'
-        : 'text-muted-foreground hover:text-foreground hover:bg-accent'
-    }`
+        ? "bg-primary/10 text-primary"
+        : "text-muted-foreground hover:text-foreground hover:bg-accent"
+    }`;
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-xl">
@@ -38,7 +38,7 @@ export function Navbar() {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-purple-600 shadow-lg shadow-primary/25 transition-transform group-hover:scale-105">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-emerald-600 shadow-lg shadow-primary/25 transition-transform group-hover:scale-105">
               <CreditCard className="h-5 w-5 text-white" />
             </div>
             <span className="text-xl font-bold gradient-text">SubTrack</span>
@@ -47,16 +47,19 @@ export function Navbar() {
           {/* Desktop Navigation */}
           {isAuthenticated && (
             <div className="hidden md:flex items-center gap-1">
-              <Link to="/dashboard" className={navLinkClass('/dashboard')}>
+              <Link to="/dashboard" className={navLinkClass("/dashboard")}>
                 <LayoutDashboard className="h-4 w-4" />
                 Dashboard
               </Link>
-              <Link to="/profile" className={navLinkClass('/profile')}>
+              <Link to="/profile" className={navLinkClass("/profile")}>
                 <User className="h-4 w-4" />
                 Profile
               </Link>
-              {user?.role === 'admin' && (
-                <Link to="/admin/dashboard" className={navLinkClass('/admin/dashboard')}>
+              {user?.role === "admin" && (
+                <Link
+                  to="/admin/dashboard"
+                  className={navLinkClass("/admin/dashboard")}
+                >
                   <Shield className="h-4 w-4" />
                   Admin
                 </Link>
@@ -115,7 +118,7 @@ export function Navbar() {
           <div className="md:hidden border-t border-border py-4 space-y-2 animate-fade-in">
             <Link
               to="/dashboard"
-              className={navLinkClass('/dashboard')}
+              className={navLinkClass("/dashboard")}
               onClick={() => setMobileMenuOpen(false)}
             >
               <LayoutDashboard className="h-4 w-4" />
@@ -123,16 +126,16 @@ export function Navbar() {
             </Link>
             <Link
               to="/profile"
-              className={navLinkClass('/profile')}
+              className={navLinkClass("/profile")}
               onClick={() => setMobileMenuOpen(false)}
             >
               <User className="h-4 w-4" />
               Profile
             </Link>
-            {user?.role === 'admin' && (
+            {user?.role === "admin" && (
               <Link
                 to="/admin/dashboard"
-                className={navLinkClass('/admin/dashboard')}
+                className={navLinkClass("/admin/dashboard")}
                 onClick={() => setMobileMenuOpen(false)}
               >
                 <Shield className="h-4 w-4" />
@@ -154,5 +157,5 @@ export function Navbar() {
         )}
       </div>
     </nav>
-  )
+  );
 }
