@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { db } from '../db';
 import { users, subscriptions, notificationLogs } from '../db/schema';
 import { requireAdmin } from '../middleware/auth';
-import { eq, count, sql } from 'drizzle-orm';
+import { eq, count, sql, sum } from 'drizzle-orm';
 import { updateUserLimitSchema, updateUserStatusSchema, paginationSchema } from '../validators/admin';
 
 const adminRouter = new Hono();
@@ -161,6 +161,71 @@ adminRouter.put('/users/:id/status', async (c) => {
     .returning();
 
   return c.json({ data: updated });
+});
+
+// GET /api/admin/stats - System statistics
+adminRouter.get('/stats', async (c) => {
+  // Total users
+  const [totalUsers] = await db.select({ count: count() }).from(users);
+
+  // Active users
+  const [activeUsers] = await db
+    .select({ count: count() })
+    .from(users)
+    .where(eq(users.isActive, true));
+
+  // Total subscriptions
+  const [totalSubs] = await db
+    .select({ count: count() })
+    .from(subscriptions)
+    .where(eq(subscriptions.isActive, true));
+
+  // Total notifications sent
+  const [totalNotifications] = await db
+    .select({ count: count() })
+    .from(notificationLogs);
+
+  // Notifications sent today
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const [notificationsToday] = await db
+    .select({ count: count() })
+    .from(notificationLogs)
+    .where(sql`${notificationLogs.sentAt} >= ${today.toISOString()}`);
+
+  // Failed notifications
+  const [failedNotifications] = await db
+    .select({ count: count() })
+    .from(notificationLogs)
+    .where(eq(notificationLogs.status, 'failed'));
+
+  // Users with Telegram connected
+  const [telegramUsers] = await db
+    .select({ count: count() })
+    .from(users)
+    .where(sql`${users.telegramChatId} IS NOT NULL`);
+
+  return c.json({
+    data: {
+      users: {
+        total: totalUsers.count,
+        active: activeUsers.count,
+        withTelegram: telegramUsers.count,
+      },
+      subscriptions: {
+        total: totalSubs.count,
+        averagePerUser: totalUsers.count > 0 ? (totalSubs.count / totalUsers.count).toFixed(2) : 0,
+      },
+      notifications: {
+        total: totalNotifications.count,
+        today: notificationsToday.count,
+        failed: failedNotifications.count,
+        successRate: totalNotifications.count > 0
+          ? (((totalNotifications.count - failedNotifications.count) / totalNotifications.count) * 100).toFixed(2)
+          : 100,
+      },
+    }
+  });
 });
 
 export default adminRouter;
