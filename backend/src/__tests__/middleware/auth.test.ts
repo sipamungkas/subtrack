@@ -1,8 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createMockContext } from '../mocks/context';
 
-// Mock auth
-const mockGetSession = vi.fn();
+// Use vi.hoisted to avoid hoisting issues
+const { mockGetSession } = vi.hoisted(() => ({
+  mockGetSession: vi.fn(),
+}));
+
 vi.mock('../../lib/auth', () => ({
   auth: {
     api: {

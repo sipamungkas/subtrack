@@ -1,14 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// Mock database
-const mockDb = {
-  select: vi.fn().mockReturnThis(),
-  from: vi.fn().mockReturnThis(),
-  where: vi.fn().mockReturnThis(),
-  limit: vi.fn().mockReturnThis(),
-  update: vi.fn().mockReturnThis(),
-  set: vi.fn().mockReturnThis(),
-};
+// Use vi.hoisted to avoid hoisting issues
+const { mockDb } = vi.hoisted(() => ({
+  mockDb: {
+    select: vi.fn().mockReturnThis(),
+    from: vi.fn().mockReturnThis(),
+    where: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockReturnThis(),
+    update: vi.fn().mockReturnThis(),
+    set: vi.fn().mockReturnThis(),
+  },
+}));
 
 vi.mock('../../db', () => ({
   db: mockDb,

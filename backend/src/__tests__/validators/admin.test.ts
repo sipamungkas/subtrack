@@ -53,8 +53,8 @@ describe('Admin Validators', () => {
       const result = paginationSchema.safeParse({});
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.data.page).toBe(1);
-        expect(result.data.limit).toBe(20);
+        expect(result.data.page).toBe('1'); // String since it's from query params
+        expect(result.data.limit).toBe('20'); // String since it's from query params
       }
     });
 
