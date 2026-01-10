@@ -12,12 +12,52 @@ export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
   email: varchar('email', { length: 255 }).notNull().unique(),
   name: varchar('name', { length: 255 }),
+  emailVerified: boolean('email_verified').notNull().default(false),
+  image: text('image'),
   telegramChatId: varchar('telegram_chat_id', { length: 255 }),
   subscriptionLimit: integer('subscription_limit').notNull().default(15),
   isActive: boolean('is_active').notNull().default(true),
   role: roleEnum('role').notNull().default('user'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const user = users;
+
+export const session = pgTable("session", {
+  id: text("id").primaryKey(),
+  expiresAt: timestamp("expires_at").notNull(),
+  token: text("token").notNull().unique(),
+  createdAt: timestamp("created_at").notNull(),
+  updatedAt: timestamp("updated_at").notNull(),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: 'cascade' })
+});
+
+export const account = pgTable("account", {
+  id: text("id").primaryKey(),
+  accountId: text("account_id").notNull(),
+  providerId: text("provider_id").notNull(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  accessToken: text("access_token"),
+  refreshToken: text("refresh_token"),
+  idToken: text("id_token"),
+  accessTokenExpiresAt: timestamp("access_token_expires_at"),
+  refreshTokenExpiresAt: timestamp("refresh_token_expires_at"),
+  scope: text("scope"),
+  password: text("password"),
+  createdAt: timestamp("created_at").notNull(),
+  updatedAt: timestamp("updated_at").notNull()
+});
+
+export const verification = pgTable("verification", {
+  id: text("id").primaryKey(),
+  identifier: text("identifier").notNull(),
+  value: text("value").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at"),
+  updatedAt: timestamp("updated_at")
 });
 
 // Subscriptions table

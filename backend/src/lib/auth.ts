@@ -1,17 +1,28 @@
-import { betterAuth } from 'better-auth';
-import { db } from '../db';
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { betterAuth } from "better-auth";
+import { db } from "../db";
+import * as schema from "../db/schema";
 
 export const auth = betterAuth({
-  database: {
-    provider: 'postgres',
-    url: process.env.DATABASE_URL!,
-  },
+  database: drizzleAdapter(db, {
+    provider: "pg",
+    schema: {
+      user: schema.users,
+      session: schema.session,
+      account: schema.account,
+      verification: schema.verification,
+    },
+  }),
   emailAndPassword: {
     enabled: true,
   },
   secret: process.env.BETTER_AUTH_SECRET!,
   baseURL: process.env.BETTER_AUTH_URL!,
   trustedOrigins: [process.env.FRONTEND_URL!],
+  advanced: {},
+  logger: {
+    level: "debug",
+  },
 });
 
 export type Auth = typeof auth;
