@@ -1,6 +1,6 @@
 import { db } from "../db";
 import { currencyRates } from "../db/schema";
-import { eq, desc, lt, and } from "drizzle-orm";
+import { eq, desc, lt, and, gte } from "drizzle-orm";
 
 interface FixerResponse {
   success: boolean;
@@ -97,9 +97,35 @@ export async function updateRates(rates: Record<string, number>): Promise<void> 
 }
 
 /**
- * Fetch and update all exchange rates
+ * Check if we already have exchange rates for today
  */
-export async function refreshExchangeRates(): Promise<boolean> {
+export async function hasRatesForToday(): Promise<boolean> {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const result = await db
+    .select({ id: currencyRates.id })
+    .from(currencyRates)
+    .where(gte(currencyRates.fetchedAt, today))
+    .limit(1);
+
+  return result.length > 0;
+}
+
+/**
+ * Fetch and update all exchange rates
+ * Skips fetching if rates already exist for today
+ */
+export async function refreshExchangeRates(force: boolean = false): Promise<boolean> {
+  // Check if we already have rates for today
+  if (!force) {
+    const alreadyHasRates = await hasRatesForToday();
+    if (alreadyHasRates) {
+      console.log("✅ Exchange rates already fetched today, skipping...");
+      return true;
+    }
+  }
+
   console.log("🔄 Refreshing exchange rates...");
 
   const rates = await fetchExchangeRates();

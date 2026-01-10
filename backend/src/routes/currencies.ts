@@ -21,9 +21,11 @@ currencies.get('/rates', async (c) => {
 /**
  * POST /api/currencies/refresh
  * Manually refresh exchange rates (admin only)
+ * Query param: ?force=true to force refresh even if already fetched today
  */
 currencies.post('/refresh', requireAuth, requireAdmin, async (c) => {
-  const success = await refreshExchangeRates();
+  const force = c.req.query('force') === 'true';
+  const success = await refreshExchangeRates(force);
 
   if (!success) {
     return c.json({ error: 'Failed to refresh exchange rates' }, 500);
@@ -32,7 +34,7 @@ currencies.post('/refresh', requireAuth, requireAdmin, async (c) => {
   const { rates, updatedAt } = await getAllLatestRates();
 
   return c.json({
-    message: 'Exchange rates refreshed successfully',
+    message: force ? 'Exchange rates force refreshed successfully' : 'Exchange rates refreshed successfully',
     base: 'USD',
     rates,
     updatedAt: updatedAt?.toISOString() || null,
