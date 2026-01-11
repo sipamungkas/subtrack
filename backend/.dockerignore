@@ -1,0 +1,39 @@
+# Dependencies
+node_modules
+.bun
+
+# Build output
+dist
+
+# Environment files (use docker secrets or env vars instead)
+.env
+.env.local
+.env.*.local
+
+# Tests
+src/__tests__
+**/*.test.ts
+**/*.spec.ts
+vitest.config.ts
+TESTING.md
+coverage
+
+# Development files
+.git
+.gitignore
+.vscode
+.idea
+*.md
+!README.md
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Misc
+*.tgz
+.npmrc
