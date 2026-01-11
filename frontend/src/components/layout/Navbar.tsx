@@ -1,15 +1,7 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
-import {
-  LayoutDashboard,
-  User,
-  Shield,
-  LogOut,
-  Menu,
-  X,
-  CreditCard,
-} from "lucide-react";
+import { LayoutDashboard, User, Shield, LogOut, Menu, X } from "lucide-react";
 import { useState } from "react";
 
 export function Navbar() {
@@ -38,9 +30,12 @@ export function Navbar() {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-emerald-600 shadow-lg shadow-primary/25 transition-transform group-hover:scale-105">
-              <CreditCard className="h-5 w-5 text-white" />
-            </div>
+            <img
+              src="/subnudge-icon.webp"
+              alt="Subnudge"
+              className="h-9 w-9 rounded-xl shadow-lg shadow-primary/25 transition-transform group-hover:scale-105"
+            />
+
             <span className="text-xl font-bold gradient-text">Subnudge</span>
           </Link>
 

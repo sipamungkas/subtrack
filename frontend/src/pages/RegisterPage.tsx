@@ -1,79 +1,86 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '@/lib/auth'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Turnstile } from '@/components/ui/turnstile'
-import { toast } from '@/hooks/use-toast'
-import { CreditCard, ArrowRight, Loader2, Check } from 'lucide-react'
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/lib/auth";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Turnstile } from "@/components/ui/turnstile";
+import { toast } from "@/hooks/use-toast";
+import { ArrowRight, Loader2, Check } from "lucide-react";
 
 const features = [
-  'Track unlimited subscriptions',
-  'Telegram reminders',
-  'Payment method tracking',
-  'Free forever',
-]
+  "Track unlimited subscriptions",
+  "Telegram reminders",
+  "Payment method tracking",
+  "Free forever",
+];
 
 export function RegisterPage() {
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const navigate = useNavigate()
-  const { signUp } = useAuth()
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+  const { signUp } = useAuth();
 
   const handleCaptchaVerify = (token: string) => {
-    setCaptchaToken(token)
-  }
+    setCaptchaToken(token);
+  };
 
   const handleCaptchaError = () => {
-    setCaptchaToken(null)
+    setCaptchaToken(null);
     toast({
-      title: 'CAPTCHA Error',
-      description: 'Failed to verify CAPTCHA. Please refresh and try again.',
-      variant: 'destructive',
-    })
-  }
+      title: "CAPTCHA Error",
+      description: "Failed to verify CAPTCHA. Please refresh and try again.",
+      variant: "destructive",
+    });
+  };
 
   const handleCaptchaExpire = () => {
-    setCaptchaToken(null)
-  }
+    setCaptchaToken(null);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     // Validate CAPTCHA token
     if (!captchaToken) {
       toast({
-        title: 'Verification Required',
-        description: 'Please complete the security check',
-        variant: 'destructive',
-      })
-      return
+        title: "Verification Required",
+        description: "Please complete the security check",
+        variant: "destructive",
+      });
+      return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
 
     try {
-      await signUp(name, email, password, captchaToken)
-      toast({ title: 'Welcome!', description: 'Account created successfully' })
-      navigate('/dashboard')
+      await signUp(name, email, password, captchaToken);
+      toast({ title: "Welcome!", description: "Account created successfully" });
+      navigate("/dashboard");
     } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } } }
+      const err = error as { response?: { data?: { message?: string } } };
       toast({
-        title: 'Error',
-        description: err.response?.data?.message || 'Failed to create account',
-        variant: 'destructive',
-      })
+        title: "Error",
+        description: err.response?.data?.message || "Failed to create account",
+        variant: "destructive",
+      });
       // Reset captcha on error so user can retry
-      setCaptchaToken(null)
+      setCaptchaToken(null);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className="flex items-center justify-center min-h-[80vh] animate-fade-in">
@@ -81,12 +88,16 @@ export function RegisterPage() {
         {/* Logo */}
         <div className="text-center space-y-2">
           <div className="flex justify-center">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-purple-600 shadow-lg shadow-primary/25">
-              <CreditCard className="h-7 w-7 text-white" />
-            </div>
+            <img
+              src="/subnudge-icon.webp"
+              alt="Subnudge"
+              className="h-14 w-14 rounded-2xl shadow-lg shadow-primary/25"
+            />
           </div>
           <h1 className="text-3xl font-bold gradient-text">Create Account</h1>
-          <p className="text-muted-foreground">Start tracking your subscriptions today</p>
+          <p className="text-muted-foreground">
+            Start tracking your subscriptions today
+          </p>
         </div>
 
         <Card className="glass border-border/50">
@@ -143,7 +154,10 @@ export function RegisterPage() {
               {/* Features list */}
               <div className="bg-accent/30 rounded-lg p-4 space-y-2">
                 {features.map((feature) => (
-                  <div key={feature} className="flex items-center gap-2 text-sm">
+                  <div
+                    key={feature}
+                    className="flex items-center gap-2 text-sm"
+                  >
                     <Check className="h-4 w-4 text-success" />
                     <span>{feature}</span>
                   </div>
@@ -179,8 +193,11 @@ export function RegisterPage() {
           </CardContent>
           <CardFooter className="flex flex-col gap-4 border-t border-border/50 pt-6">
             <p className="text-sm text-muted-foreground text-center">
-              Already have an account?{' '}
-              <Link to="/login" className="text-primary hover:underline font-medium">
+              Already have an account?{" "}
+              <Link
+                to="/login"
+                className="text-primary hover:underline font-medium"
+              >
                 Sign in
               </Link>
             </p>
@@ -188,5 +205,5 @@ export function RegisterPage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }
