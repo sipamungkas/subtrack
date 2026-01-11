@@ -74,7 +74,7 @@ describe('DashboardPage', () => {
 
     await waitFor(() => {
       const editButtons = screen.getAllByRole('link', { name: '' }).filter(
-        link => link.getAttribute('href')?.includes('/subscriptions/')
+        (link: HTMLElement) => link.getAttribute('href')?.includes('/subscriptions/')
       )
       expect(editButtons.length).toBeGreaterThan(0)
     })
@@ -90,7 +90,7 @@ describe('DashboardPage', () => {
 
     // Find and click the first delete button (trash icon button)
     const deleteButtons = screen.getAllByRole('button').filter(
-      btn => btn.className.includes('text-destructive')
+      (btn: HTMLElement) => btn.className.includes('text-destructive')
     )
 
     if (deleteButtons.length > 0) {
