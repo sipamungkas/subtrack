@@ -36,9 +36,12 @@ import {
   Send,
   TrendingUp,
   Coins,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { useState } from "react";
 import type { Subscription, CostBreakdown } from "@/types";
+import { maskEmail } from "@/lib/utils/mask-email";
 
 function getDaysUntilRenewal(renewalDate: string): number {
   const today = new Date();
@@ -72,9 +75,11 @@ function getRenewalBadge(daysUntil: number) {
 function SubscriptionCard({
   subscription,
   onDelete,
+  showEmail = false,
 }: {
   subscription: Subscription;
   onDelete: () => void;
+  showEmail?: boolean;
 }) {
   const daysUntil = getDaysUntilRenewal(subscription.renewalDate);
   const testNotification = useTestSubscriptionNotification();
@@ -95,6 +100,11 @@ function SubscriptionCard({
       });
     }
   };
+
+  // Mask account name if it looks like an email and showEmail is false
+  const displayAccountName = subscription.accountName.includes("@") && !showEmail
+    ? maskEmail(subscription.accountName)
+    : subscription.accountName;
 
   return (
     <Card className="card-hover group">
@@ -124,7 +134,7 @@ function SubscriptionCard({
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-xs bg-muted px-2 py-0.5 rounded">
-                  {subscription.accountName}
+                  {displayAccountName}
                 </span>
               </div>
             </div>
@@ -179,6 +189,7 @@ export function DashboardPage() {
   });
   const { data: stats, isLoading: statsLoading } = useSubscriptionStats();
   const deleteSubscription = useDeleteSubscription();
+  const [showEmails, setShowEmails] = useState(false);
   const [deleteDialog, setDeleteDialog] = useState<{
     open: boolean;
     subscription: Subscription | null;
@@ -339,10 +350,33 @@ export function DashboardPage() {
       {/* Subscriptions List */}
       <Card className="glass border-border/50">
         <CardHeader>
-          <CardTitle>Your Subscriptions</CardTitle>
-          <CardDescription>
-            All your active subscriptions in one place
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Your Subscriptions</CardTitle>
+              <CardDescription>
+                All your active subscriptions in one place
+              </CardDescription>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowEmails(!showEmails)}
+              className="gap-2 text-muted-foreground hover:text-foreground"
+              title={showEmails ? "Hide emails" : "Show emails"}
+            >
+              {showEmails ? (
+                <>
+                  <EyeOff className="h-4 w-4" />
+                  <span className="hidden sm:inline">Hide Emails</span>
+                </>
+              ) : (
+                <>
+                  <Eye className="h-4 w-4" />
+                  <span className="hidden sm:inline">Show Emails</span>
+                </>
+              )}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {subscriptions && subscriptions.length > 0 ? (
@@ -351,6 +385,7 @@ export function DashboardPage() {
                 <SubscriptionCard
                   key={sub.id}
                   subscription={sub}
+                  showEmail={showEmails}
                   onDelete={() =>
                     setDeleteDialog({ open: true, subscription: sub })
                   }

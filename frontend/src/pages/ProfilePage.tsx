@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { toast } from '@/hooks/use-toast'
+import { maskEmail } from '@/lib/utils/mask-email'
 import {
   User,
   Mail,
@@ -120,13 +121,13 @@ export function ProfilePage() {
                 <Mail className="h-4 w-4 text-muted-foreground" />
                 <Input
                   id="email"
-                  type="email"
-                  value={profile?.email || ''}
+                  type="text"
+                  value={maskEmail(profile?.email)}
                   disabled
                   className="bg-muted/50"
                 />
               </div>
-              <p className="text-xs text-muted-foreground">Email cannot be changed</p>
+              <p className="text-xs text-muted-foreground">Email is masked for privacy</p>
             </div>
 
             <div className="space-y-2">

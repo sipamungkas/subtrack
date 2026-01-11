@@ -15,6 +15,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { toast } from '@/hooks/use-toast'
+import { maskEmail } from '@/lib/utils/mask-email'
 import {
   ArrowLeft,
   Loader2,
@@ -64,7 +65,7 @@ export function AdminUsersPage() {
       await updateStatus.mutateAsync({ userId: user.id, isActive: !user.isActive })
       toast({
         title: user.isActive ? 'Deactivated' : 'Activated',
-        description: `User ${user.email} has been ${user.isActive ? 'deactivated' : 'activated'}`,
+        description: `User ${maskEmail(user.email)} has been ${user.isActive ? 'deactivated' : 'activated'}`,
       })
     } catch {
       toast({ title: 'Error', description: 'Failed to update user status', variant: 'destructive' })
@@ -114,7 +115,7 @@ export function AdminUsersPage() {
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="font-medium truncate">{user.email}</span>
+                    <span className="font-medium truncate">{maskEmail(user.email)}</span>
                     {user.role === 'admin' && (
                       <Badge variant="default">Admin</Badge>
                     )}
@@ -218,7 +219,7 @@ export function AdminUsersPage() {
           <DialogHeader>
             <DialogTitle>Update Subscription Limit</DialogTitle>
             <DialogDescription>
-              Set a new subscription limit for {limitDialog.user?.email}
+              Set a new subscription limit for {maskEmail(limitDialog.user?.email)}
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">

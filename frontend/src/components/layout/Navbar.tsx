@@ -3,6 +3,7 @@ import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { LayoutDashboard, User, Shield, LogOut, Menu, X } from "lucide-react";
 import { useState } from "react";
+import { maskEmail } from "@/lib/utils/mask-email";
 
 export function Navbar() {
   const { user, isAuthenticated, signOut } = useAuth();
@@ -68,7 +69,7 @@ export function Navbar() {
               <>
                 <div className="hidden md:flex items-center gap-3">
                   <span className="text-sm text-muted-foreground">
-                    {user?.email}
+                    {maskEmail(user?.email)}
                   </span>
                   <Button
                     variant="ghost"
