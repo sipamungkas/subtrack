@@ -5,6 +5,7 @@ import { requireAdmin } from '../middleware/auth';
 import { eq, count, sql, sum } from 'drizzle-orm';
 import { updateUserLimitSchema, updateUserStatusSchema, paginationSchema } from '../validators/admin';
 import { sendTelegramMessage } from '../lib/telegram';
+import { sendEmail } from '../lib/email';
 
 const adminRouter = new Hono();
 
@@ -193,6 +194,36 @@ adminRouter.put('/users/:id/status', async (c) => {
     .returning();
 
   return c.json({ data: updated });
+});
+
+// POST /api/admin/test-email - Test email sending (development only)
+adminRouter.post('/test-email', async (c) => {
+  const body = await c.req.json();
+  const { to } = body;
+
+  if (!to) {
+    return c.json({ error: 'VALIDATION_ERROR', message: 'Email address is required' }, 400);
+  }
+
+  const result = await sendEmail({
+    to,
+    subject: 'Test Email from Subnudge',
+    text: 'This is a test email to verify your SMTP configuration is working correctly.',
+    html: `
+      <div style="font-family: Arial, sans-serif; padding: 20px;">
+        <h2>Test Email</h2>
+        <p>This is a test email to verify your SMTP configuration is working correctly.</p>
+        <p>If you received this, your email setup is working!</p>
+        <p>Sent at: ${new Date().toISOString()}</p>
+      </div>
+    `,
+  });
+
+  if (result) {
+    return c.json({ success: true, message: `Test email sent to ${to}` });
+  } else {
+    return c.json({ error: 'EMAIL_FAILED', message: 'Failed to send test email. Check server logs.' }, 500);
+  }
 });
 
 // GET /api/admin/stats - System statistics

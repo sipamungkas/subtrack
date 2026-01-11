@@ -19,6 +19,7 @@
     "@types/bun": "latest",
     "@types/node": "^25.0.3",
     "@types/node-cron": "^3.0.11",
+    "@types/nodemailer": "^7.0.5",
     "@vitest/ui": "^4.0.16",
     "vitest": "^4.0.16"
   },
@@ -34,6 +35,7 @@
     "grammy": "^1.39.2",
     "hono": "^4.11.3",
     "node-cron": "^4.2.1",
+    "nodemailer": "^7.0.12",
     "postgres": "^3.4.8",
     "zod": "^4.3.5"
   }

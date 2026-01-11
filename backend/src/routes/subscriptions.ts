@@ -72,6 +72,23 @@ subscriptionRouter.get("/stats", async (c) => {
       )
     );
 
+  // Helper function to normalize cost to monthly
+  const normalizeToMonthlyCost = (
+    cost: number,
+    billingCycle: string
+  ): number => {
+    switch (billingCycle) {
+      case "yearly":
+        return cost / 12;
+      case "quarterly":
+        return cost / 3;
+      case "monthly":
+      case "custom":
+      default:
+        return cost;
+    }
+  };
+
   // Calculate costs with currency conversion
   const costBreakdown: Array<{
     currency: string;
@@ -79,12 +96,13 @@ subscriptionRouter.get("/stats", async (c) => {
     convertedToUSD: number;
   }> = [];
 
-  // Group subscriptions by currency
+  // Group subscriptions by currency (normalized to monthly cost)
   const byCurrency: Record<string, number> = {};
   for (const sub of userSubscriptions) {
     const currency = sub.currency || "USD";
     const cost = parseFloat(sub.cost);
-    byCurrency[currency] = (byCurrency[currency] || 0) + cost;
+    const monthlyCost = normalizeToMonthlyCost(cost, sub.billingCycle);
+    byCurrency[currency] = (byCurrency[currency] || 0) + monthlyCost;
   }
 
   // Convert each currency to USD

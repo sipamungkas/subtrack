@@ -3,6 +3,7 @@ import { betterAuth } from "better-auth";
 import { captcha } from "better-auth/plugins";
 import { db } from "../db";
 import * as schema from "../db/schema";
+import { sendEmail, getPasswordResetEmailHtml } from "./email";
 
 const isProduction = process.env.NODE_ENV === 'production';
 
@@ -15,6 +16,15 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
+    sendResetPassword: async ({ user, url }) => {
+      // Use void to avoid awaiting (prevents timing attacks)
+      void sendEmail({
+        to: user.email,
+        subject: "Reset your password - Subnudge",
+        text: `Click the link to reset your password: ${url}`,
+        html: getPasswordResetEmailHtml(url),
+      });
+    },
   },
   secret: process.env.BETTER_AUTH_SECRET!,
   baseURL: process.env.BETTER_AUTH_URL!,
@@ -23,6 +33,11 @@ export const auth = betterAuth({
     captcha({
       provider: "cloudflare-turnstile",
       secretKey: process.env.TURNSTILE_SECRET_KEY!,
+      endpoints: [
+        "/sign-in/email",
+        "/sign-up/email",
+        "/request-password-reset",
+      ],
     }),
   ],
   logger: {
