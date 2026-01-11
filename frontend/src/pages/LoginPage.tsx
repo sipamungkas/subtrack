@@ -78,7 +78,7 @@ export function LoginPage() {
             </div>
           </div>
           <h1 className="text-3xl font-bold gradient-text">Welcome back</h1>
-          <p className="text-muted-foreground">Sign in to your SubTrack account</p>
+          <p className="text-muted-foreground">Sign in to your Subnudge account</p>
         </div>
 
         <Card className="glass border-border/50">

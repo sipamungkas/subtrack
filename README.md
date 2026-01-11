@@ -1,6 +1,10 @@
-# SubTrack
+# Subnudge
 
-A subscription tracking application with Telegram notifications. Track your recurring subscriptions, get reminded before renewal dates, and manage everything through a modern web interface.
+**Stay ahead of every subscription.**
+
+A subscription tracking application with Telegram notifications. Track your recurring subscriptions, get reminded before renewal dates, and never miss a payment again.
+
+🌐 **Website:** [subnudge.app](https://subnudge.app)
 
 ## Tech Stack
 
@@ -31,7 +35,7 @@ A subscription tracking application with Telegram notifications. Track your recu
 
 ```bash
 git clone <repository-url>
-cd subtrack
+cd subnudge
 ```
 
 ### 2. Set up the Backend
@@ -49,11 +53,11 @@ cp .env.example .env
 Edit `.env` with your configuration:
 
 ```env
-DATABASE_URL=postgresql://user:password@localhost:5432/subtrack
+DATABASE_URL=postgresql://user:password@localhost:5432/subnudge
 BETTER_AUTH_SECRET=your-secret-key-here
 BETTER_AUTH_URL=http://localhost:3000
 TELEGRAM_BOT_TOKEN=your-bot-token-from-botfather
-TELEGRAM_BOT_USERNAME=YourBotUsername
+TELEGRAM_BOT_USERNAME=SubnudgeBot
 NODE_ENV=development
 PORT=3000
 FRONTEND_URL=http://localhost:5173
@@ -92,7 +96,7 @@ Edit `.env` if needed:
 
 ```env
 VITE_API_URL=http://localhost:3000
-VITE_TELEGRAM_BOT_USERNAME=YourBotUsername
+VITE_TELEGRAM_BOT_USERNAME=SubnudgeBot
 ```
 
 Start the frontend development server:
@@ -133,7 +137,7 @@ The frontend will be running at `http://localhost:5173`.
 ## Project Structure
 
 ```
-subtrack/
+subnudge/
 ├── backend/
 │   ├── src/
 │   │   ├── db/           # Database schema and connection
@@ -141,7 +145,7 @@ subtrack/
 │   │   ├── middleware/   # Hono middleware
 │   │   ├── services/     # Business logic
 │   │   ├── bot/          # Telegram bot setup
-│   │   ├── cron/         # Scheduled jobs
+│   │   ├── lib/          # Utilities
 │   │   └── index.ts      # Entry point
 │   └── drizzle/          # Database migrations
 ├── frontend/
@@ -164,6 +168,7 @@ subtrack/
 - **Subscription Management**: Add, edit, and delete subscriptions
 - **Renewal Reminders**: Get notified via Telegram before subscriptions renew
 - **Customizable Reminders**: Set reminder days (1, 3, 7, 14, or 30 days before)
+- **Multi-Currency Support**: Track subscriptions in different currencies
 - **Admin Dashboard**: Manage users and view system statistics
 - **Subscription Limits**: Admins can set subscription limits per user
 
@@ -175,6 +180,20 @@ subtrack/
 4. Set the bot username (without @) in your `.env` file
 
 Users can connect their Telegram account from the Profile page to receive notifications.
+
+## Docker Deployment
+
+See [DOCKER.md](backend/DOCKER.md) for Docker deployment instructions.
+
+### Quick Start with Docker Compose
+
+```bash
+cd backend
+cp .env.docker.example .env
+# Edit .env with your values
+docker compose up -d
+docker compose exec backend bun run db:migrate
+```
 
 ## Running Tests
 

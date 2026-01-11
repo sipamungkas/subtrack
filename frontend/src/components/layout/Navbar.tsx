@@ -41,7 +41,7 @@ export function Navbar() {
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-emerald-600 shadow-lg shadow-primary/25 transition-transform group-hover:scale-105">
               <CreditCard className="h-5 w-5 text-white" />
             </div>
-            <span className="text-xl font-bold gradient-text">SubTrack</span>
+            <span className="text-xl font-bold gradient-text">Subnudge</span>
           </Link>
 
           {/* Desktop Navigation */}

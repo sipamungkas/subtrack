@@ -119,7 +119,7 @@ userRouter.post('/telegram/test', async (c) => {
     }, 400);
   }
 
-  const message = '🔔 Test notification from SubTrack!\n\nYou will receive subscription reminders here.';
+  const message = '🔔 Test notification from Subnudge!\n\nYou will receive subscription reminders here.';
   const success = await sendTelegramMessage(profile.telegramChatId, message);
 
   if (!success) {

@@ -11,9 +11,9 @@ export async function handleStart(ctx: Context) {
   // /start without code
   if (parts.length === 1) {
     await ctx.reply(
-      '👋 Welcome to SubTrack!\n\n' +
+      '👋 Welcome to Subnudge!\n\n' +
       'To connect your account:\n' +
-      '1. Log in to SubTrack web app\n' +
+      '1. Log in to Subnudge web app\n' +
       '2. Go to Profile → Connect Telegram\n' +
       '3. Copy the verification code\n' +
       '4. Send it here using: /start YOUR_CODE'

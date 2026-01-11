@@ -1,5 +1,5 @@
 # ============================================
-# SubTrack Backend - Dockerfile
+# Subnudge Backend - Dockerfile
 # Multi-stage build for optimized production image
 # ============================================
 
@@ -38,7 +38,7 @@ WORKDIR /app
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
-    adduser -S subtrack -u 1001 -G nodejs
+    adduser -S subnudge -u 1001 -G nodejs
 
 # Copy production dependencies from dependencies stage
 COPY --from=dependencies /app/node_modules ./node_modules
@@ -55,10 +55,10 @@ COPY --from=builder /app/src/db ./src/db
 COPY drizzle ./drizzle
 
 # Set ownership to non-root user
-RUN chown -R subtrack:nodejs /app
+RUN chown -R subnudge:nodejs /app
 
 # Switch to non-root user
-USER subtrack
+USER subnudge
 
 # Expose port
 EXPOSE 3000

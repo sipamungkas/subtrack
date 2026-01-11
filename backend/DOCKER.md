@@ -1,4 +1,4 @@
-# SubTrack Backend - Docker Deployment Guide
+# Subnudge Backend - Docker Deployment Guide
 
 ## Quick Start
 
@@ -29,11 +29,11 @@ Use this when you have an external database (e.g., managed PostgreSQL).
 
 ```bash
 # 1. Build the image
-docker build -t subtrack-backend:latest .
+docker build -t subnudge-backend:latest .
 
 # 2. Run the container
 docker run -d \
-  --name subtrack-backend \
+  --name subnudge-backend \
   -p 3000:3000 \
   -e DATABASE_URL="postgresql://user:password@host:5432/database" \
   -e BETTER_AUTH_SECRET="your-secret-key-here" \
@@ -41,7 +41,7 @@ docker run -d \
   -e FRONTEND_URL="https://yourdomain.com" \
   -e TELEGRAM_BOT_TOKEN="your-bot-token" \
   -e TELEGRAM_BOT_USERNAME="YourBot" \
-  subtrack-backend:latest
+  subnudge-backend:latest
 ```
 
 ---
@@ -77,31 +77,31 @@ docker run -d \
 
 ```bash
 # Build with specific tag
-docker build -t subtrack-backend:v1.0.0 .
+docker build -t subnudge-backend:v1.0.0 .
 
 # Build with latest tag
-docker build -t subtrack-backend:latest .
+docker build -t subnudge-backend:latest .
 ```
 
 ### Pushing to Registry
 
 ```bash
 # Tag for your registry
-docker tag subtrack-backend:latest your-registry.com/subtrack-backend:latest
+docker tag subnudge-backend:latest your-registry.com/subnudge-backend:latest
 
 # Push
-docker push your-registry.com/subtrack-backend:latest
+docker push your-registry.com/subnudge-backend:latest
 ```
 
 ### Running in Production
 
 ```bash
 docker run -d \
-  --name subtrack-backend \
+  --name subnudge-backend \
   --restart unless-stopped \
   -p 3000:3000 \
   --env-file /path/to/.env \
-  subtrack-backend:latest
+  subnudge-backend:latest
 ```
 
 ---
@@ -115,7 +115,7 @@ docker run -d \
 docker compose exec backend bun run db:migrate
 
 # With standalone container
-docker exec subtrack-backend bun run db:migrate
+docker exec subnudge-backend bun run db:migrate
 ```
 
 ### Generating New Migrations
@@ -135,7 +135,7 @@ The container includes a health check endpoint:
 
 ```bash
 # Check container health
-docker inspect --format='{{.State.Health.Status}}' subtrack-backend
+docker inspect --format='{{.State.Health.Status}}' subnudge-backend
 
 # Manual health check
 curl http://localhost:3000/health
@@ -179,7 +179,7 @@ docker compose exec backend sh
 docker compose exec backend ps aux
 
 # Check memory usage
-docker stats subtrack-backend
+docker stats subnudge-backend
 ```
 
 ### Cleanup
@@ -258,7 +258,7 @@ docker compose exec backend sh
 
 ### Permission errors
 
-The container runs as non-root user `subtrack` (UID 1001). If mounting volumes, ensure correct permissions:
+The container runs as non-root user `subnudge` (UID 1001). If mounting volumes, ensure correct permissions:
 
 ```bash
 # Fix permissions on host
@@ -272,7 +272,7 @@ sudo chown -R 1001:1001 /path/to/volume
 | Property | Value |
 |----------|-------|
 | Base Image | `oven/bun:1.2-alpine` |
-| User | `subtrack` (UID 1001) |
+| User | `subnudge` (UID 1001) |
 | Working Directory | `/app` |
 | Exposed Port | `3000` |
 | Health Check | `GET /health` |

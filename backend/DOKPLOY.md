@@ -1,6 +1,6 @@
-# Dokploy Deployment Guide - SubTrack Backend
+# Dokploy Deployment Guide - Subnudge Backend
 
-This guide explains how to deploy the SubTrack backend to Dokploy using GitHub Container Registry (GHCR).
+This guide explains how to deploy the Subnudge backend to Dokploy using GitHub Container Registry (GHCR).
 
 ## Prerequisites
 
@@ -27,7 +27,7 @@ git push origin main
 
 The GitHub Action will automatically:
 1. Build the Docker image
-2. Push to `ghcr.io/<your-username>/subtrack/backend:latest`
+2. Push to `ghcr.io/<your-username>/subnudge/backend:latest`
 
 ---
 
@@ -44,12 +44,12 @@ The GitHub Action will automatically:
 Set the image source:
 
 ```
-ghcr.io/<your-github-username>/subtrack/backend:latest
+ghcr.io/<your-github-username>/subnudge/backend:latest
 ```
 
 Example:
 ```
-ghcr.io/sipamungkas/subtrack/backend:latest
+ghcr.io/sipamungkas/subnudge/backend:latest
 ```
 
 ### 3.3 Configure Registry Authentication
@@ -197,7 +197,7 @@ The GitHub Action creates these tags:
 For production stability, consider using a specific version tag instead of `latest`:
 
 ```
-ghcr.io/<username>/subtrack/backend:1.0.0
+ghcr.io/<username>/subnudge/backend:1.0.0
 ```
 
 ---
@@ -208,7 +208,7 @@ ghcr.io/<username>/subtrack/backend:1.0.0
 
 1. Check registry credentials in Dokploy
 2. Verify the image name is correct
-3. Check if the image exists: `docker pull ghcr.io/<username>/subtrack/backend:latest`
+3. Check if the image exists: `docker pull ghcr.io/<username>/subnudge/backend:latest`
 
 ### Container Keeps Restarting
 

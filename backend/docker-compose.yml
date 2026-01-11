@@ -1,5 +1,5 @@
 # ============================================
-# SubTrack - Docker Compose
+# Subnudge - Docker Compose
 # For local development and testing
 # ============================================
 
@@ -7,35 +7,35 @@ services:
   # PostgreSQL Database
   db:
     image: postgres:16-alpine
-    container_name: subtrack-db
+    container_name: subnudge-db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-subtrack}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-subtrack_password}
-      POSTGRES_DB: ${POSTGRES_DB:-subtrack}
+      POSTGRES_USER: ${POSTGRES_USER:-subnudge}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-subnudge_password}
+      POSTGRES_DB: ${POSTGRES_DB:-subnudge}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-subtrack} -d ${POSTGRES_DB:-subtrack}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-subnudge} -d ${POSTGRES_DB:-subnudge}"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # SubTrack Backend API
+  # Subnudge Backend API
   backend:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: subtrack-backend
+    container_name: subnudge-backend
     restart: unless-stopped
     ports:
       - "${PORT:-3000}:3000"
     environment:
       NODE_ENV: ${NODE_ENV:-production}
       PORT: 3000
-      DATABASE_URL: postgresql://${POSTGRES_USER:-subtrack}:${POSTGRES_PASSWORD:-subtrack_password}@db:5432/${POSTGRES_DB:-subtrack}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-subnudge}:${POSTGRES_PASSWORD:-subnudge_password}@db:5432/${POSTGRES_DB:-subnudge}
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?BETTER_AUTH_SECRET is required}
       BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:3000}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}

@@ -1,7 +1,7 @@
-# Security Audit Report - SubTrack
+# Security Audit Report - Subnudge
 
 **Date:** 2026-01-10
-**Application:** SubTrack - Subscription Tracking Application
+**Application:** Subnudge - Subscription Tracking Application
 **Auditor:** Automated Security Audit
 **Severity Levels:** Critical | High | Medium | Low | Informational
 
@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-SubTrack is a subscription tracking application with a **Bun/Hono backend** and a **React/Vite frontend**, featuring Telegram integration for notifications. The application uses **Better-Auth** for authentication and **Drizzle ORM** with PostgreSQL.
+Subnudge is a subscription tracking application with a **Bun/Hono backend** and a **React/Vite frontend**, featuring Telegram integration for notifications. The application uses **Better-Auth** for authentication and **Drizzle ORM** with PostgreSQL.
 
 ### Overall Assessment
 

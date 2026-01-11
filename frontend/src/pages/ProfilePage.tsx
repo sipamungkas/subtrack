@@ -252,7 +252,7 @@ export function ProfilePage() {
               <div className="p-4 bg-muted/50 rounded-lg space-y-3">
                 <p className="text-sm">
                   Send this command to{' '}
-                  <strong>@{import.meta.env.VITE_TELEGRAM_BOT_USERNAME || 'SubTrackBot'}</strong>:
+                  <strong>@{import.meta.env.VITE_TELEGRAM_BOT_USERNAME || 'SubnudgeBot'}</strong>:
                 </p>
                 <div className="flex items-center gap-2">
                   <code className="flex-1 bg-background p-3 rounded-lg font-mono text-sm break-all">
