@@ -11,16 +11,27 @@ import {
   ArrowRight,
   MessageCircle,
   CheckCircle,
-  XCircle
+  XCircle,
+  AlertTriangle
 } from 'lucide-react'
 
 export function AdminDashboardPage() {
-  const { data: stats, isLoading } = useAdminStats()
+  const { data: stats, isLoading, error } = useAdminStats()
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <AlertTriangle className="h-12 w-12 text-destructive" />
+        <h2 className="text-xl font-semibold">Failed to load admin stats</h2>
+        <p className="text-muted-foreground">{(error as Error).message}</p>
       </div>
     )
   }

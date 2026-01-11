@@ -4,6 +4,7 @@ import { users, subscriptions, notificationLogs } from '../db/schema';
 import { requireAdmin } from '../middleware/auth';
 import { eq, count, sql, sum } from 'drizzle-orm';
 import { updateUserLimitSchema, updateUserStatusSchema, paginationSchema } from '../validators/admin';
+import { sendTelegramMessage } from '../lib/telegram';
 
 const adminRouter = new Hono();
 
@@ -119,14 +120,34 @@ adminRouter.put('/users/:id/limit', async (c) => {
     return c.json({ error: 'NOT_FOUND', message: 'User not found' }, 404);
   }
 
+  const oldLimit = user.subscriptionLimit;
+  const newLimit = validation.data.subscriptionLimit;
+
   const [updated] = await db
     .update(users)
     .set({
-      subscriptionLimit: validation.data.subscriptionLimit,
+      subscriptionLimit: newLimit,
       updatedAt: new Date(),
     })
     .where(eq(users.id, id))
     .returning();
+
+  // Send Telegram notification if user has Telegram connected and limit was increased
+  if (user.telegramChatId && newLimit > oldLimit) {
+    const message =
+      `🎉 *Good News!*\n\n` +
+      `Your subscription limit has been increased!\n\n` +
+      `📊 *Previous limit:* ${oldLimit}\n` +
+      `📈 *New limit:* ${newLimit}\n\n` +
+      `You can now track more subscriptions. Enjoy!`;
+
+    try {
+      await sendTelegramMessage(user.telegramChatId, message);
+    } catch (error) {
+      console.error('Failed to send limit increase notification:', error);
+      // Don't fail the request if notification fails
+    }
+  }
 
   return c.json({ data: updated });
 });

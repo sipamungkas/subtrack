@@ -9,6 +9,7 @@ export function useAdminStats() {
       const { data } = await api.get<{ data: AdminStats }>('/api/admin/stats')
       return data.data
     },
+    retry: 1,
   })
 }
 
@@ -21,6 +22,7 @@ export function useAdminUsers(page = 1, limit = 20) {
       )
       return data
     },
+    retry: 1,
   })
 }
 

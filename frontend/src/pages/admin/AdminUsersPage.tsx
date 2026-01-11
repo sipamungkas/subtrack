@@ -26,13 +26,14 @@ import {
   CreditCard,
   Settings,
   UserX,
-  UserCheck
+  UserCheck,
+  AlertTriangle
 } from 'lucide-react'
 import type { AdminUser } from '@/types'
 
 export function AdminUsersPage() {
   const [page, setPage] = useState(1)
-  const { data, isLoading } = useAdminUsers(page, 10)
+  const { data, isLoading, error } = useAdminUsers(page, 10)
   const updateLimit = useUpdateUserLimit()
   const updateStatus = useUpdateUserStatus()
 
@@ -76,6 +77,22 @@ export function AdminUsersPage() {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <AlertTriangle className="h-12 w-12 text-destructive" />
+        <h2 className="text-xl font-semibold">Failed to load users</h2>
+        <p className="text-muted-foreground">{(error as Error).message}</p>
+        <Link to="/admin/dashboard">
+          <Button variant="outline" className="gap-2">
+            <ArrowLeft className="h-4 w-4" />
+            Back to Dashboard
+          </Button>
+        </Link>
       </div>
     )
   }
