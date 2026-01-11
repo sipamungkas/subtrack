@@ -65,9 +65,9 @@ export function RegisterPage() {
     setIsLoading(true);
 
     try {
-      await signUp(name, email, password, captchaToken);
-      toast({ title: "Welcome!", description: "Account created successfully" });
-      navigate("/dashboard");
+      const { email: userEmail } = await signUp(name, email, password, captchaToken);
+      toast({ title: "Account Created!", description: "Please verify your email to continue" });
+      navigate(`/verify-email?email=${encodeURIComponent(userEmail)}`);
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
       toast({
