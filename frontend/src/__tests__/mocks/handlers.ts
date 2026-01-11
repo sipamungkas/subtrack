@@ -9,6 +9,7 @@ export const mockUser: UserProfile = {
   telegramChatId: undefined,
   subscriptionLimit: 15,
   role: 'user',
+  emailVerified: true,
 }
 
 export const mockAdminUser: UserProfile = {
@@ -18,6 +19,7 @@ export const mockAdminUser: UserProfile = {
   telegramChatId: '123456789',
   subscriptionLimit: 100,
   role: 'admin',
+  emailVerified: true,
 }
 
 export const mockSubscriptions: Subscription[] = [
