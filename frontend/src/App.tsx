@@ -3,12 +3,14 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from './lib/query-client'
 import { AuthProvider, useAuth } from './lib/auth'
 import { Layout } from './components/layout/Layout'
+import { EmailVerificationBlocker } from './components/EmailVerificationBlocker'
 
 // Pages
 import { LoginPage } from './pages/LoginPage'
 import { RegisterPage } from './pages/RegisterPage'
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
 import { ResetPasswordPage } from './pages/ResetPasswordPage'
+import { VerifyEmailPage } from './pages/VerifyEmailPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { SubscriptionNewPage } from './pages/SubscriptionNewPage'
@@ -18,7 +20,7 @@ import { AdminUsersPage } from './pages/admin/AdminUsersPage'
 import { Loader2 } from 'lucide-react'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth()
+  const { isAuthenticated, isLoading, isEmailVerified } = useAuth()
 
   if (isLoading) {
     return (
@@ -32,11 +34,21 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     return <Navigate to="/login" />
   }
 
+  // Show blocker for unverified users
+  if (!isEmailVerified) {
+    return (
+      <>
+        {children}
+        <EmailVerificationBlocker />
+      </>
+    )
+  }
+
   return <>{children}</>
 }
 
 function AdminRoute({ children }: { children: React.ReactNode }) {
-  const { user, isAuthenticated, isLoading } = useAuth()
+  const { user, isAuthenticated, isLoading, isEmailVerified } = useAuth()
 
   if (isLoading) {
     return (
@@ -48,6 +60,16 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
 
   if (!isAuthenticated || user?.role !== 'admin') {
     return <Navigate to="/dashboard" />
+  }
+
+  // Show blocker for unverified admins
+  if (!isEmailVerified) {
+    return (
+      <>
+        {children}
+        <EmailVerificationBlocker />
+      </>
+    )
   }
 
   return <>{children}</>
@@ -65,6 +87,27 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (isAuthenticated) {
+    return <Navigate to="/dashboard" />
+  }
+
+  return <>{children}</>
+}
+
+// Route for verify-email that requires auth but not verification
+function VerifyEmailRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, isLoading, isEmailVerified } = useAuth()
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[80vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
+  }
+
+  // Allow unauthenticated access (for signup flow)
+  // Redirect verified users to dashboard
+  if (isAuthenticated && isEmailVerified) {
     return <Navigate to="/dashboard" />
   }
 
@@ -107,6 +150,16 @@ function AppRoutes() {
             <PublicRoute>
               <ResetPasswordPage />
             </PublicRoute>
+          }
+        />
+
+        {/* Email verification route */}
+        <Route
+          path="/verify-email"
+          element={
+            <VerifyEmailRoute>
+              <VerifyEmailPage />
+            </VerifyEmailRoute>
           }
         />
 
