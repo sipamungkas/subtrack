@@ -56,6 +56,13 @@ export interface UserProfile {
   telegramChatId?: string
   subscriptionLimit: number
   role: 'user' | 'admin'
+  emailVerified: boolean
+}
+
+export interface OTPResendStatus {
+  allowed: boolean
+  waitSeconds?: number
+  attemptsLeft?: number
 }
 
 export interface TelegramConnectResponse {
