@@ -1,19 +1,18 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
-// Use vi.hoisted to avoid hoisting issues
-const { mockRedis } = vi.hoisted(() => ({
-  mockRedis: {
-    get: vi.fn(),
-    set: vi.fn(),
-    del: vi.fn(),
-  },
-}));
+// Create mock redis before importing the module
+const mockRedis = {
+  get: vi.fn(),
+  set: vi.fn(),
+  del: vi.fn(),
+};
 
 vi.mock("../redis", () => ({
   redis: mockRedis,
 }));
 
-import { canResendOTP, recordResendAttempt, clearResendLimit } from "../otp-rate-limit";
+// Import after mocking
+const { canResendOTP, recordResendAttempt, clearResendLimit } = await import("../otp-rate-limit");
 
 describe("OTP Rate Limiting", () => {
   beforeEach(() => {
