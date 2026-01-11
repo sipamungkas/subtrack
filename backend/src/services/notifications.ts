@@ -2,6 +2,7 @@ import { db } from "../db";
 import { subscriptions, users, notificationLogs } from "../db/schema";
 import { eq, and, sql, lte, inArray } from "drizzle-orm";
 import { sendTelegramMessage } from "../lib/telegram";
+import { maskEmail } from "../lib/mask-email";
 
 interface SubscriptionWithUser {
   subscription: typeof subscriptions.$inferSelect;
@@ -105,7 +106,7 @@ export function formatReminderMessage(
     }\n` +
     `💵 *Cost:* ${subscription.currency} ${subscription.cost}\n` +
     `💳 *Payment:* ${subscription.paymentMethod}\n` +
-    `👤 *Account:* ${subscription.accountName}\n` +
+    `👤 *Account:* ${subscription.accountName?.includes("@") ? maskEmail(subscription.accountName).replace(/\*/g, '\\*') : subscription.accountName}\n` +
     (subscription.notes ? `\n📝 *Notes:* ${subscription.notes}` : "")
   );
 }
