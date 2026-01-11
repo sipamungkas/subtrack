@@ -3,18 +3,7 @@
 # Multi-stage build for optimized production image
 # ============================================
 
-# Stage 1: Install dependencies
-FROM oven/bun:1.2-alpine AS dependencies
-
-WORKDIR /app
-
-# Copy package files
-COPY package.json bun.lock ./
-
-# Install dependencies (production only)
-RUN bun install --frozen-lockfile --production
-
-# Stage 2: Build the application
+# Stage 1: Build the application
 FROM oven/bun:1.2-alpine AS builder
 
 WORKDIR /app
@@ -31,7 +20,7 @@ COPY drizzle.config.ts ./
 # Build the application
 RUN bun build src/index.ts --outdir dist --target bun
 
-# Stage 3: Production image
+# Stage 2: Production image
 FROM oven/bun:1.2-alpine AS production
 
 WORKDIR /app
@@ -40,8 +29,8 @@ WORKDIR /app
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S subnudge -u 1001 -G nodejs
 
-# Copy production dependencies from dependencies stage
-COPY --from=dependencies /app/node_modules ./node_modules
+# Copy all node_modules from builder (needed for drizzle-kit migrations)
+COPY --from=builder /app/node_modules ./node_modules
 
 # Copy built application from builder stage
 COPY --from=builder /app/dist ./dist
@@ -51,6 +40,7 @@ COPY package.json ./
 
 # Copy drizzle config and migrations (needed for db:migrate)
 COPY drizzle.config.ts ./
+COPY tsconfig.json ./
 COPY --from=builder /app/src/db ./src/db
 COPY drizzle ./drizzle
 
