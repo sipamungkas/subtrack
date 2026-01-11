@@ -104,12 +104,11 @@ export default defineConfig(({ mode }) => ({
 }))
 ```
 
-### 3. Replace Placeholder IDs
+### 3. Tracking IDs (Configured)
 
-Replace in the config above:
-- `G-XXXXXXXXXX` → Your GA4 Measurement ID
-- `https://your-umami-domain.com/script.js` → Your Umami script URL
-- `your-website-id` → Your Umami website ID
+- GA4 Measurement ID: `G-2ZZ3NG9SMM`
+- Umami script URL: `https://umami.awans.id/script.js`
+- Umami website ID: `f510a727-c8bb-410b-a3f7-fa1f0a8e184b`
 
 ## Testing
 
