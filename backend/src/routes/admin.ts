@@ -132,19 +132,30 @@ adminRouter.put('/users/:id/limit', async (c) => {
     .where(eq(users.id, id))
     .returning();
 
-  // Send Telegram notification if user has Telegram connected and limit was increased
-  if (user.telegramChatId && newLimit > oldLimit) {
-    const message =
-      `🎉 *Good News!*\n\n` +
-      `Your subscription limit has been increased!\n\n` +
-      `📊 *Previous limit:* ${oldLimit}\n` +
-      `📈 *New limit:* ${newLimit}\n\n` +
-      `You can now track more subscriptions. Enjoy!`;
+  // Send Telegram notification if user has Telegram connected and limit changed
+  if (user.telegramChatId && newLimit !== oldLimit) {
+    let message: string;
+
+    if (newLimit > oldLimit) {
+      message =
+        `🎉 *Good News!*\n\n` +
+        `Your subscription limit has been increased!\n\n` +
+        `📊 *Previous limit:* ${oldLimit}\n` +
+        `📈 *New limit:* ${newLimit}\n\n` +
+        `You can now track more subscriptions. Enjoy!`;
+    } else {
+      message =
+        `📋 *Limit Update*\n\n` +
+        `Your subscription limit has been adjusted.\n\n` +
+        `📊 *Previous limit:* ${oldLimit}\n` +
+        `📉 *New limit:* ${newLimit}\n\n` +
+        `If you have questions, please contact support.`;
+    }
 
     try {
       await sendTelegramMessage(user.telegramChatId, message);
     } catch (error) {
-      console.error('Failed to send limit increase notification:', error);
+      console.error('Failed to send limit change notification:', error);
       // Don't fail the request if notification fails
     }
   }
