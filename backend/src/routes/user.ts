@@ -22,11 +22,17 @@ userRouter.get('/profile', async (c) => {
       telegramChatId: users.telegramChatId,
       subscriptionLimit: users.subscriptionLimit,
       role: users.role,
+      emailVerified: users.emailVerified,
     })
     .from(users)
     .where(eq(users.id, user.id));
 
-  return c.json({ data: profile });
+  return c.json({
+    data: {
+      ...profile,
+      emailVerified: profile.emailVerified ?? false,
+    },
+  });
 });
 
 // PUT /api/user/profile - Update user profile
