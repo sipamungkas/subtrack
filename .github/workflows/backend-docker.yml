@@ -106,3 +106,32 @@ jobs:
           echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
           echo "docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+  # ============================================
+  # Deploy to Dokploy
+  # ============================================
+  deploy:
+    name: Deploy to Dokploy
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: github.event_name != 'pull_request'
+
+    steps:
+      - name: Trigger Dokploy Deployment
+        run: |
+          echo "🚀 Triggering Dokploy deployment..."
+
+          response=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${{ secrets.DOKPLOY_WEBHOOK_URL }}")
+
+          if [ "$response" -eq 200 ] || [ "$response" -eq 201 ] || [ "$response" -eq 204 ]; then
+            echo "✅ Deployment triggered successfully (HTTP $response)"
+          else
+            echo "❌ Deployment trigger failed (HTTP $response)"
+            exit 1
+          fi
+
+      - name: Deployment summary
+        run: |
+          echo "## 🚀 Deployment Triggered" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Dokploy webhook has been triggered. Check your Dokploy dashboard for deployment status." >> $GITHUB_STEP_SUMMARY

@@ -54,6 +54,10 @@ COPY drizzle.config.ts ./
 COPY --from=builder /app/src/db ./src/db
 COPY drizzle ./drizzle
 
+# Copy startup script
+COPY scripts/start.sh ./scripts/start.sh
+RUN chmod +x ./scripts/start.sh
+
 # Set ownership to non-root user
 RUN chown -R subnudge:nodejs /app
 
@@ -71,5 +75,5 @@ ENV PORT=3000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1
 
-# Start the application
-CMD ["bun", "run", "dist/index.js"]
+# Start the application (runs migrations first, then starts server)
+CMD ["./scripts/start.sh"]
