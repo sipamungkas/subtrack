@@ -8,9 +8,9 @@ set -e
 
 echo "🚀 Starting Subnudge Backend..."
 
-# Run database migrations
+# Run database migrations (uses db:migrate:prod which doesn't need dotenv)
 echo "📦 Running database migrations..."
-bun run db:migrate
+bun run db:migrate:prod
 
 echo "✅ Migrations complete!"
 
