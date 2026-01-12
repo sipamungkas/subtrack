@@ -20,6 +20,7 @@ export function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaKey, setCaptchaKey] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { signIn } = useAuth();
@@ -69,6 +70,7 @@ export function LoginPage() {
       });
       // Reset captcha on error so user can retry
       setCaptchaToken(null);
+      setCaptchaKey((k) => k + 1);
     } finally {
       setIsLoading(false);
     }
@@ -138,6 +140,7 @@ export function LoginPage() {
 
               {/* Turnstile CAPTCHA */}
               <Turnstile
+                key={captchaKey}
                 onVerify={handleCaptchaVerify}
                 onError={handleCaptchaError}
                 onExpire={handleCaptchaExpire}

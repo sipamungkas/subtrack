@@ -47,6 +47,20 @@ const reminderOptions = [
   { value: 30, label: "30 days before" },
 ];
 
+const validBillingCycles = ["monthly", "yearly", "quarterly", "custom"] as const;
+type BillingCycle = (typeof validBillingCycles)[number];
+
+const validCurrencies = ["USD", "EUR", "GBP", "IDR"] as const;
+type Currency = (typeof validCurrencies)[number];
+
+function isValidBillingCycle(value: unknown): value is BillingCycle {
+  return typeof value === "string" && validBillingCycles.includes(value as BillingCycle);
+}
+
+function isValidCurrency(value: unknown): value is Currency {
+  return typeof value === "string" && validCurrencies.includes(value as Currency);
+}
+
 export function SubscriptionEditPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -67,12 +81,18 @@ export function SubscriptionEditPage() {
 
   useEffect(() => {
     if (subscription) {
+      const billingCycle = isValidBillingCycle(subscription.billingCycle)
+        ? subscription.billingCycle
+        : "monthly";
+      const currency = isValidCurrency(subscription.currency)
+        ? subscription.currency
+        : "USD";
       setFormData({
         serviceName: subscription.serviceName,
         renewalDate: subscription.renewalDate,
         cost: subscription.cost,
-        currency: subscription.currency,
-        billingCycle: subscription.billingCycle,
+        currency,
+        billingCycle,
         paymentMethod: subscription.paymentMethod,
         accountName: subscription.accountName,
         reminderDays: subscription.reminderDays,
@@ -196,12 +216,14 @@ export function SubscriptionEditPage() {
                 <Label htmlFor="currency">Currency</Label>
                 <Select
                   value={formData.currency || "USD"}
-                  onValueChange={(value) =>
-                    setFormData((prev) => ({ ...prev, currency: value }))
-                  }
+                  onValueChange={(value) => {
+                    if (isValidCurrency(value)) {
+                      setFormData((prev) => ({ ...prev, currency: value }));
+                    }
+                  }}
                 >
                   <SelectTrigger className="bg-background/50">
-                    <SelectValue />
+                    <SelectValue placeholder="Select currency" />
                   </SelectTrigger>
                   <SelectContent>
                     {currencies.map((currency) => (
@@ -220,15 +242,17 @@ export function SubscriptionEditPage() {
                 <Label htmlFor="billingCycle">Billing Cycle</Label>
                 <Select
                   value={formData.billingCycle}
-                  onValueChange={(value) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      billingCycle: value as typeof formData.billingCycle,
-                    }))
-                  }
+                  onValueChange={(value) => {
+                    if (isValidBillingCycle(value)) {
+                      setFormData((prev) => ({
+                        ...prev,
+                        billingCycle: value,
+                      }));
+                    }
+                  }}
                 >
                   <SelectTrigger className="bg-background/50">
-                    <SelectValue />
+                    <SelectValue placeholder="Select billing cycle" />
                   </SelectTrigger>
                   <SelectContent>
                     {billingCycles.map((cycle) => (
