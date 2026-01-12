@@ -4,7 +4,7 @@
 
 ### Option 1: Using Docker Compose (Recommended for Development)
 
-This will start both the PostgreSQL database and the backend API.
+This will start PostgreSQL, Redis, and the backend API.
 
 ```bash
 # 1. Copy environment template
@@ -25,7 +25,7 @@ docker compose logs -f backend
 
 ### Option 2: Build and Run Standalone Container
 
-Use this when you have an external database (e.g., managed PostgreSQL).
+Use this when you have external database and Redis services.
 
 ```bash
 # 1. Build the image
@@ -36,6 +36,7 @@ docker run -d \
   --name subnudge-backend \
   -p 3000:3000 \
   -e DATABASE_URL="postgresql://user:password@host:5432/database" \
+  -e REDIS_URL="redis://your-redis-host:6379" \
   -e BETTER_AUTH_SECRET="your-secret-key-here" \
   -e BETTER_AUTH_URL="https://api.yourdomain.com" \
   -e FRONTEND_URL="https://yourdomain.com" \
@@ -53,6 +54,7 @@ docker run -d \
 | Variable | Description | Example |
 |----------|-------------|---------|
 | `DATABASE_URL` | PostgreSQL connection string | `postgresql://user:pass@host:5432/db` |
+| `REDIS_URL` | Redis connection string | `redis://localhost:6379` |
 | `BETTER_AUTH_SECRET` | Secret key for auth (32+ chars) | `your-super-secret-key-at-least-32-chars` |
 | `BETTER_AUTH_URL` | Backend API URL | `https://api.example.com` |
 | `FRONTEND_URL` | Frontend app URL (for CORS) | `https://app.example.com` |
@@ -255,6 +257,26 @@ docker compose logs db
 docker compose exec backend sh
 # Then: nc -zv db 5432
 ```
+
+### Redis connection errors
+
+```bash
+# Check if Redis is running
+docker compose ps redis
+
+# Check Redis logs
+docker compose logs redis
+
+# Test connection from backend container
+docker compose exec backend sh
+# Then: nc -zv redis 6379
+
+# Verify Redis is responding
+docker compose exec redis redis-cli ping
+# Should return: PONG
+```
+
+If Redis is unavailable, the app will log errors but continue running with degraded rate limiting functionality.
 
 ### Permission errors
 

@@ -81,6 +81,7 @@ In Dokploy, add these environment variables:
 | Variable | Value |
 |----------|-------|
 | `DATABASE_URL` | `postgresql://user:password@host:5432/database` |
+| `REDIS_URL` | `redis://your-redis-host:6379` (see Redis Setup below) |
 | `BETTER_AUTH_SECRET` | A random string, 32+ characters |
 | `BETTER_AUTH_URL` | Your backend URL (e.g., `https://api.yourdomain.com`) |
 | `FRONTEND_URL` | Your frontend URL (e.g., `https://app.yourdomain.com`) |
@@ -146,7 +147,45 @@ bun run db:migrate
 
 ---
 
-## Step 5: Set Up Auto-Deploy (Optional)
+## Step 5: Redis Setup
+
+Redis is required for rate limiting and OTP resend tracking.
+
+### Option A: Use Dokploy's Redis
+
+1. In Dokploy, create a new Redis service using the `redis:7-alpine` image
+2. Note the service name (e.g., `subnudge-redis`)
+3. Set `REDIS_URL` in your backend app:
+   ```
+   redis://subnudge-redis:6379
+   ```
+
+### Option B: Use Managed Redis (Recommended for Production)
+
+Use a managed Redis service for better reliability:
+
+| Provider | Free Tier | Notes |
+|----------|-----------|-------|
+| [Upstash](https://upstash.com) | 10K commands/day | Serverless, great for low traffic |
+| [Redis Cloud](https://redis.com/cloud) | 30MB | Managed by Redis Labs |
+| [Railway](https://railway.app) | $5 credit | Easy setup |
+
+After creating your Redis instance, set the `REDIS_URL` environment variable with the connection string provided by your provider.
+
+### Verify Redis Connection
+
+After deployment, check the logs to verify Redis connection:
+
+```bash
+# In Dokploy logs, you should see:
+Redis connected
+```
+
+If Redis is unavailable, the app will log connection errors but continue running (with degraded rate limiting functionality).
+
+---
+
+## Step 6: Set Up Auto-Deploy (Optional)
 
 ### Using Dokploy Webhooks
 
