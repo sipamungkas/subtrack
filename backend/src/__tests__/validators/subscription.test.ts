@@ -177,6 +177,23 @@ describe('Subscription Validators', () => {
     });
   });
 
+  describe('updateSubscriptionSchema > customIntervalDays', () => {
+    it('should accept updating billingCycle away from custom', () => {
+      const result = updateSubscriptionSchema.safeParse({billingCycle: 'monthly'});
+      expect(result.success).toBe(true);
+    });
+
+    it('should accept updating customIntervalDays alone', () => {
+      const result = updateSubscriptionSchema.safeParse({customIntervalDays: 60});
+      expect(result.success).toBe(true);
+    });
+
+    it('should reject changing billingCycle to custom without interval', () => {
+      const result = updateSubscriptionSchema.safeParse({billingCycle: 'custom'});
+      expect(result.success).toBe(false);
+    });
+  });
+
   describe('subscriptionQuerySchema', () => {
     it('should validate active filter', () => {
       const result = subscriptionQuerySchema.safeParse({ active: 'true' });
