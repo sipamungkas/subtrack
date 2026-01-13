@@ -22,7 +22,8 @@ import {
   Unlink,
   Send,
   Copy,
-  Check
+  Check,
+  HelpCircle
 } from 'lucide-react'
 
 export function ProfilePage() {
@@ -79,7 +80,7 @@ export function ProfilePage() {
 
   const handleCopyCode = () => {
     if (telegramCode) {
-      navigator.clipboard.writeText(telegramCode.message)
+      navigator.clipboard.writeText(`/start ${telegramCode.code}`)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     }
@@ -250,26 +251,79 @@ export function ProfilePage() {
             </div>
           ) : telegramCode ? (
             <div className="space-y-4">
-              <div className="p-4 bg-muted/50 rounded-lg space-y-3">
-                <p className="text-sm">
-                  Send this command to{' '}
-                  <strong>@{import.meta.env.VITE_TELEGRAM_BOT_USERNAME || 'SubnudgeBot'}</strong>:
-                </p>
-                <div className="flex items-center gap-2">
-                  <code className="flex-1 bg-background p-3 rounded-lg font-mono text-sm break-all">
-                    /start {telegramCode.code}
-                  </code>
-                  <Button variant="outline" size="icon" onClick={handleCopyCode}>
-                    {copied ? (
-                      <Check className="h-4 w-4 text-success" />
-                    ) : (
-                      <Copy className="h-4 w-4" />
-                    )}
-                  </Button>
+              <div className="p-4 bg-primary/5 rounded-lg border border-primary/20 space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold shrink-0">
+                    1
+                  </div>
+                  <div>
+                    <p className="font-medium">Open Telegram</p>
+                    <p className="text-sm text-muted-foreground">
+                      Open the Telegram app on your phone or desktop
+                    </p>
+                  </div>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  This code expires in 15 minutes
-                </p>
+
+                <div className="flex items-start gap-3">
+                  <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold shrink-0">
+                    2
+                  </div>
+                  <div>
+                    <p className="font-medium">Find our bot</p>
+                    <p className="text-sm text-muted-foreground">
+                      Search for <strong>@{import.meta.env.VITE_TELEGRAM_BOT_USERNAME || 'SubnudgeBot'}</strong> or{' '}
+                      <a
+                        href={`https://t.me/${import.meta.env.VITE_TELEGRAM_BOT_USERNAME || 'SubnudgeBot'}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary hover:underline"
+                      >
+                        click here to open directly
+                      </a>
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold shrink-0">
+                    3
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium">Send this command</p>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Copy and send this message to the bot:
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <code className="flex-1 bg-background p-3 rounded-lg font-mono text-sm break-all border">
+                        /start {telegramCode.code}
+                      </code>
+                      <Button variant="outline" size="icon" onClick={handleCopyCode}>
+                        {copied ? (
+                          <Check className="h-4 w-4 text-success" />
+                        ) : (
+                          <Copy className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold shrink-0">
+                    4
+                  </div>
+                  <div>
+                    <p className="font-medium">Refresh this page</p>
+                    <p className="text-sm text-muted-foreground">
+                      After sending the command, refresh this page to see your connection status
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Bell className="h-3 w-3" />
+                <span>This code expires in 15 minutes</span>
               </div>
 
               <Button
@@ -282,9 +336,23 @@ export function ProfilePage() {
             </div>
           ) : (
             <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Connect your Telegram account to receive reminders before your subscriptions renew.
-              </p>
+              <div className="p-4 bg-muted/30 rounded-lg space-y-3">
+                <p className="text-sm font-medium">Why connect Telegram?</p>
+                <ul className="text-sm text-muted-foreground space-y-2">
+                  <li className="flex items-start gap-2">
+                    <Bell className="h-4 w-4 mt-0.5 text-primary shrink-0" />
+                    <span>Get reminders before your subscriptions renew</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <MessageCircle className="h-4 w-4 mt-0.5 text-primary shrink-0" />
+                    <span>Receive notifications directly on your phone</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="h-4 w-4 mt-0.5 text-primary shrink-0" />
+                    <span>Never miss a payment or forget to cancel</span>
+                  </li>
+                </ul>
+              </div>
               <Button
                 onClick={handleConnectTelegram}
                 disabled={connectTelegram.isPending}
@@ -304,6 +372,39 @@ export function ProfilePage() {
               </Button>
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Need Help */}
+      <Card className="glass border-border/50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <HelpCircle className="h-5 w-5" />
+            Need Help?
+          </CardTitle>
+          <CardDescription>
+            Chat with us on Telegram or email support@subnudge.app
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-3">
+            <Button variant="outline" asChild className="gap-2">
+              <a
+                href="https://t.me/SubnudgeSupport_bot"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <MessageCircle className="h-4 w-4" />
+                Telegram Support
+              </a>
+            </Button>
+            <Button variant="outline" asChild className="gap-2">
+              <a href="mailto:support@subnudge.app">
+                <Mail className="h-4 w-4" />
+                Email Support
+              </a>
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>

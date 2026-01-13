@@ -107,6 +107,7 @@ export function formatReminderMessage(
     `💵 *Cost:* ${subscription.currency} ${subscription.cost}\n` +
     `💳 *Payment:* ${subscription.paymentMethod}\n` +
     `👤 *Account:* ${subscription.accountName?.includes("@") ? maskEmail(subscription.accountName).replace(/\*/g, '\\*') : subscription.accountName}\n` +
-    (subscription.notes ? `\n📝 *Notes:* ${subscription.notes}` : "")
+    (subscription.notes ? `\n📝 *Notes:* ${subscription.notes}` : "") +
+    `\n\n---\n💬 Need help? @SubnudgeSupport_bot | ✉️ support@subnudge.app`
   );
 }
