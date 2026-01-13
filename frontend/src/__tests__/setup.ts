@@ -52,5 +52,5 @@ global.IntersectionObserver = vi.fn().mockImplementation(function () {
 })
 
 // Mock hasPointerCapture for Radix UI compatibility with jsdom
-EventTarget.prototype.hasPointerCapture = vi.fn()
-EventTarget.prototype.releasePointerCapture = vi.fn()
+; (EventTarget.prototype as any).hasPointerCapture = vi.fn()
+; (EventTarget.prototype as any).releasePointerCapture = vi.fn()

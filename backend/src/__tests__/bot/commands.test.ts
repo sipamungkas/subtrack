@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// Use vi.hoisted to avoid hoisting issues
-const { mockDb } = vi.hoisted(() => ({
-  mockDb: {
+// Mock db
+vi.mock('../../db', () => ({
+  db: {
     select: vi.fn().mockReturnThis(),
     from: vi.fn().mockReturnThis(),
     where: vi.fn().mockReturnThis(),
@@ -12,16 +12,13 @@ const { mockDb } = vi.hoisted(() => ({
   },
 }));
 
-vi.mock('../../db', () => ({
-  db: mockDb,
-}));
-
 // Mock telegram utilities
 vi.mock('../../lib/telegram', () => ({
   sendTelegramMessage: vi.fn(),
 }));
 
 import { handleStart, handleDisconnect, handleTest } from '../../bot/commands';
+import { db } from '../../db';
 
 describe('Bot Commands', () => {
   beforeEach(() => {
@@ -40,7 +37,7 @@ describe('Bot Commands', () => {
       await handleStart(mockCtx);
 
       expect(mockCtx.reply).toHaveBeenCalledWith(
-        expect.stringContaining('Welcome to SubTrack')
+        expect.stringContaining('Welcome to Subnudge')
       );
     });
 
@@ -131,14 +128,14 @@ describe('Bot Commands', () => {
       };
 
       // Mock the select chain
-      mockDb.select.mockReturnValueOnce(mockDb);
-      mockDb.from.mockReturnValueOnce(mockDb);
-      mockDb.where.mockReturnValueOnce({ limit: vi.fn().mockResolvedValue([mockUser]) });
+      (db.select as any).mockReturnValueOnce(db);
+      (db.from as any).mockReturnValueOnce(db);
+      (db.where as any).mockReturnValueOnce({ limit: vi.fn().mockResolvedValue([mockUser]) });
 
       // Mock the update chain
-      mockDb.update.mockReturnValueOnce(mockDb);
-      mockDb.set.mockReturnValueOnce(mockDb);
-      mockDb.where.mockResolvedValueOnce({});
+      (db.update as any).mockReturnValueOnce(db);
+      (db.set as any).mockReturnValueOnce(db);
+      (db.where as any).mockResolvedValueOnce({});
 
       const mockCtx: any = {
         chat: { id: 123456 },
@@ -147,17 +144,17 @@ describe('Bot Commands', () => {
 
       await handleDisconnect(mockCtx);
 
-      expect(mockDb.update).toHaveBeenCalled();
+      expect(db.update).toHaveBeenCalled();
       expect(mockCtx.reply).toHaveBeenCalledWith(
         expect.stringContaining('Disconnected successfully')
       );
     });
 
     it('should handle user not found', async () => {
-      mockDb.select.mockReturnValue(mockDb);
-      mockDb.from.mockReturnValue(mockDb);
-      mockDb.where.mockReturnValue(mockDb);
-      mockDb.limit.mockResolvedValue([]);
+      (db.select as any).mockReturnValue(db);
+      (db.from as any).mockReturnValue(db);
+      (db.where as any).mockReturnValue(db);
+      (db.limit as any).mockResolvedValue([]);
 
       const mockCtx: any = {
         chat: { id: 123456 },
@@ -185,10 +182,10 @@ describe('Bot Commands', () => {
     });
 
     it('should handle database errors', async () => {
-      mockDb.select.mockReturnValue(mockDb);
-      mockDb.from.mockReturnValue(mockDb);
-      mockDb.where.mockReturnValue(mockDb);
-      mockDb.limit.mockRejectedValue(new Error('Database error'));
+      (db.select as any).mockReturnValue(db);
+      (db.from as any).mockReturnValue(db);
+      (db.where as any).mockReturnValue(db);
+      (db.limit as any).mockRejectedValue(new Error('Database error'));
 
       const mockCtx: any = {
         chat: { id: 123456 },
@@ -210,10 +207,10 @@ describe('Bot Commands', () => {
         telegramChatId: '123456',
       };
 
-      mockDb.select.mockReturnValue(mockDb);
-      mockDb.from.mockReturnValue(mockDb);
-      mockDb.where.mockReturnValue(mockDb);
-      mockDb.limit.mockResolvedValue([mockUser]);
+      (db.select as any).mockReturnValue(db);
+      (db.from as any).mockReturnValue(db);
+      (db.where as any).mockReturnValue(db);
+      (db.limit as any).mockResolvedValue([mockUser]);
 
       const mockCtx: any = {
         chat: { id: 123456 },
@@ -228,10 +225,10 @@ describe('Bot Commands', () => {
     });
 
     it('should handle user not connected', async () => {
-      mockDb.select.mockReturnValue(mockDb);
-      mockDb.from.mockReturnValue(mockDb);
-      mockDb.where.mockReturnValue(mockDb);
-      mockDb.limit.mockResolvedValue([]);
+      (db.select as any).mockReturnValue(db);
+      (db.from as any).mockReturnValue(db);
+      (db.where as any).mockReturnValue(db);
+      (db.limit as any).mockResolvedValue([]);
 
       const mockCtx: any = {
         chat: { id: 123456 },

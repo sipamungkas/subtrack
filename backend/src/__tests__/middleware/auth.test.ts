@@ -1,19 +1,26 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createMockContext } from '../mocks/context';
 
-// Use vi.hoisted to avoid hoisting issues
-const { mockGetSession } = vi.hoisted(() => ({
-  mockGetSession: vi.fn(),
+// Mock db module
+vi.mock('../../db', () => ({
+  db: {
+    select: vi.fn().mockReturnThis(),
+    from: vi.fn().mockReturnThis(),
+    where: vi.fn().mockReturnThis(),
+  },
 }));
 
+// Mock auth module
 vi.mock('../../lib/auth', () => ({
   auth: {
     api: {
-      getSession: mockGetSession,
+      getSession: vi.fn(),
     },
   },
 }));
 
+import { auth } from '../../lib/auth';
+import { db } from '../../db';
 import { requireAuth, requireAdmin } from '../../middleware/auth';
 
 describe('Auth Middleware', () => {
@@ -28,7 +35,7 @@ describe('Auth Middleware', () => {
         session: { id: 'session-1' },
       };
 
-      mockGetSession.mockResolvedValue(mockSession);
+      (auth.api.getSession as any).mockResolvedValue(mockSession);
 
       const setFn = vi.fn();
       const ctx = createMockContext({
@@ -44,7 +51,7 @@ describe('Auth Middleware', () => {
     });
 
     it('should reject unauthenticated users', async () => {
-      mockGetSession.mockResolvedValue(null);
+      (auth.api.getSession as any).mockResolvedValue(null);
 
       const ctx = createMockContext();
       const next = vi.fn();
@@ -59,7 +66,7 @@ describe('Auth Middleware', () => {
     });
 
     it('should handle session retrieval errors', async () => {
-      mockGetSession.mockRejectedValue(new Error('Session error'));
+      (auth.api.getSession as any).mockRejectedValue(new Error('Session error'));
 
       const ctx = createMockContext();
       const next = vi.fn();
@@ -76,7 +83,12 @@ describe('Auth Middleware', () => {
         session: { id: 'session-1' },
       };
 
-      mockGetSession.mockResolvedValue(mockSession);
+      (auth.api.getSession as any).mockResolvedValue(mockSession);
+
+      // Mock db query for admin role
+      (db.select as any).mockReturnValue(db);
+      (db.from as any).mockReturnValue(db);
+      (db.where as any).mockResolvedValue([{ role: 'admin' }]);
 
       const userData = { role: 'admin' };
       const setFn = vi.fn();
@@ -97,7 +109,12 @@ describe('Auth Middleware', () => {
         session: { id: 'session-1' },
       };
 
-      mockGetSession.mockResolvedValue(mockSession);
+      (auth.api.getSession as any).mockResolvedValue(mockSession);
+
+      // Mock db query for non-admin role
+      (db.select as any).mockReturnValue(db);
+      (db.from as any).mockReturnValue(db);
+      (db.where as any).mockResolvedValue([{ role: 'user' }]);
 
       const userData = { role: 'user' };
       const setFn = vi.fn();
@@ -127,7 +144,7 @@ describe('Auth Middleware', () => {
     });
 
     it('should reject unauthenticated users', async () => {
-      mockGetSession.mockResolvedValue(null);
+      (auth.api.getSession as any).mockResolvedValue(null);
 
       const ctx = createMockContext();
       const next = vi.fn();

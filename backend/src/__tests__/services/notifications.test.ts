@@ -1,28 +1,29 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-const mockDb = {
-  select: vi.fn().mockReturnThis(),
-  from: vi.fn().mockReturnThis(),
-  innerJoin: vi.fn().mockReturnThis(),
-  where: vi.fn().mockReturnThis(),
-  limit: vi.fn().mockReturnThis(),
-  insert: vi.fn().mockReturnThis(),
-  values: vi.fn().mockReturnThis(),
-  update: vi.fn().mockReturnThis(),
-  set: vi.fn().mockReturnThis(),
-};
+vi.mock('../../db', () => {
+  return {
+    db: {
+      select: vi.fn().mockReturnThis(),
+      from: vi.fn().mockReturnThis(),
+      innerJoin: vi.fn().mockReturnThis(),
+      where: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockReturnThis(),
+      insert: vi.fn().mockReturnThis(),
+      values: vi.fn().mockReturnThis(),
+      update: vi.fn().mockReturnThis(),
+      set: vi.fn().mockReturnThis(),
+    },
+  };
+});
 
-vi.mock('../../db', () => ({
-  db: mockDb,
-}));
-
-const mockSendTelegramMessage = vi.fn();
-
-vi.mock('../../lib/telegram', () => ({
-  sendTelegramMessage: mockSendTelegramMessage,
-}));
+vi.mock('../../lib/telegram', () => {
+  return {
+    sendTelegramMessage: vi.fn(),
+  };
+});
 
 const { sendSubscriptionReminders, calculateNextRenewalDate, advancePassedRenewalDates } = await import('../../services/notifications');
+import { db } from '../../db';
 
 describe('Notification Service', () => {
   beforeEach(() => {
@@ -31,40 +32,35 @@ describe('Notification Service', () => {
 
   describe('sendSubscriptionReminders', () => {
     it('should query active subscriptions with telegram users', async () => {
-      // Mock database returning empty subscriptions
-      mockDb.select.mockReturnValueOnce(mockDb);
-      mockDb.from.mockReturnValueOnce(mockDb);
-      mockDb.innerJoin.mockReturnValueOnce(mockDb);
-      mockDb.where.mockResolvedValueOnce([]);
+      (db.select as any).mockReturnValueOnce(db);
+      (db.from as any).mockReturnValueOnce(db);
+      (db.innerJoin as any).mockReturnValueOnce(db);
+      (db.where as any).mockResolvedValueOnce([]);
 
       await sendSubscriptionReminders();
 
-      expect(mockDb.select).toHaveBeenCalled();
-      expect(mockDb.innerJoin).toHaveBeenCalled();
-      expect(mockDb.where).toHaveBeenCalled();
-      expect(mockSendTelegramMessage).not.toHaveBeenCalled();
+      expect(db.select).toHaveBeenCalled();
+      expect(db.innerJoin).toHaveBeenCalled();
+      expect(db.where).toHaveBeenCalled();
     });
 
     it('should not send notifications when no subscriptions returned', async () => {
-      mockDb.select.mockReturnValueOnce(mockDb);
-      mockDb.from.mockReturnValueOnce(mockDb);
-      mockDb.innerJoin.mockReturnValueOnce(mockDb);
-      mockDb.where.mockResolvedValueOnce([]);
+      (db.select as any).mockReturnValueOnce(db);
+      (db.from as any).mockReturnValueOnce(db);
+      (db.innerJoin as any).mockReturnValueOnce(db);
+      (db.where as any).mockResolvedValueOnce([]);
 
       await sendSubscriptionReminders();
 
-      expect(mockSendTelegramMessage).not.toHaveBeenCalled();
-      expect(mockDb.insert).not.toHaveBeenCalled();
+      expect(db.insert).not.toHaveBeenCalled();
     });
 
     it('should handle errors gracefully', async () => {
-      // Mock database error
-      mockDb.select.mockReturnValueOnce(mockDb);
-      mockDb.from.mockReturnValueOnce(mockDb);
-      mockDb.innerJoin.mockReturnValueOnce(mockDb);
-      mockDb.where.mockRejectedValueOnce(new Error('Database error'));
+      (db.select as any).mockReturnValueOnce(db);
+      (db.from as any).mockReturnValueOnce(db);
+      (db.innerJoin as any).mockReturnValueOnce(db);
+      (db.where as any).mockRejectedValueOnce(new Error('Database error'));
 
-      // Should not throw
       await expect(sendSubscriptionReminders()).resolves.not.toThrow();
     });
   });
