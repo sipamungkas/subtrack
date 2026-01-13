@@ -23,6 +23,7 @@ userRouter.get('/profile', async (c) => {
       subscriptionLimit: users.subscriptionLimit,
       role: users.role,
       emailVerified: users.emailVerified,
+      preferredCurrency: users.preferredCurrency,
     })
     .from(users)
     .where(eq(users.id, user.id));
