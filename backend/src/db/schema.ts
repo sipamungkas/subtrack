@@ -36,6 +36,9 @@ export const users = pgTable("users", {
   telegramChatId: varchar("telegram_chat_id", { length: 255 }),
   subscriptionLimit: integer("subscription_limit").notNull().default(15),
   isActive: boolean("is_active").notNull().default(true),
+  preferredCurrency: varchar("preferred_currency", { length: 3 })
+    .notNull()
+    .default("USD"),
   role: roleEnum("role").notNull().default("user"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
