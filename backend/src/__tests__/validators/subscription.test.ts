@@ -121,6 +121,62 @@ describe('Subscription Validators', () => {
     });
   });
 
+  describe('customIntervalDays validation', () => {
+    it('should accept customIntervalDays when billingCycle is custom', () => {
+      const result = createSubscriptionSchema.safeParse({
+        serviceName: 'Test Service',
+        renewalDate: '2026-01-20',
+        cost: '9.99',
+        billingCycle: 'custom',
+        customIntervalDays: 45,
+        paymentMethod: 'Credit Card',
+        accountName: 'test@example.com',
+      });
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.customIntervalDays).toBe(45);
+      }
+    });
+
+    it('should require customIntervalDays when billingCycle is custom', () => {
+      const result = createSubscriptionSchema.safeParse({
+        serviceName: 'Test Service',
+        renewalDate: '2026-01-20',
+        cost: '9.99',
+        billingCycle: 'custom',
+        paymentMethod: 'Credit Card',
+        accountName: 'test@example.com',
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it('should reject customIntervalDays less than 1', () => {
+      const result = createSubscriptionSchema.safeParse({
+        serviceName: 'Test Service',
+        renewalDate: '2026-01-20',
+        cost: '9.99',
+        billingCycle: 'custom',
+        customIntervalDays: 0,
+        paymentMethod: 'Credit Card',
+        accountName: 'test@example.com',
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it('should ignore customIntervalDays when billingCycle is not custom', () => {
+      const result = createSubscriptionSchema.safeParse({
+        serviceName: 'Test Service',
+        renewalDate: '2026-01-20',
+        cost: '9.99',
+        billingCycle: 'monthly',
+        customIntervalDays: 45,
+        paymentMethod: 'Credit Card',
+        accountName: 'test@example.com',
+      });
+      expect(result.success).toBe(true);
+    });
+  });
+
   describe('subscriptionQuerySchema', () => {
     it('should validate active filter', () => {
       const result = subscriptionQuerySchema.safeParse({ active: 'true' });
