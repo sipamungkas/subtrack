@@ -8,6 +8,13 @@
       "when": 1768015623254,
       "tag": "0000_fearless_champions",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1768278101415,
+      "tag": "0001_empty_paper_doll",
+      "breakpoints": true
     }
   ]
 }

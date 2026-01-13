@@ -94,6 +94,7 @@ export const subscriptions = pgTable("subscriptions", {
   cost: decimal("cost", { precision: 10, scale: 2 }).notNull(),
   currency: varchar("currency", { length: 10 }).notNull().default("USD"),
   billingCycle: billingCycleEnum("billing_cycle").notNull().default("monthly"),
+  customIntervalDays: integer("custom_interval_days"), // Only used when billingCycle = "custom"
   paymentMethod: text("payment_method").notNull(),
   accountName: varchar("account_name", { length: 255 }).notNull(),
   reminderDays: integer("reminder_days").array().notNull().default([7, 3, 1]),
