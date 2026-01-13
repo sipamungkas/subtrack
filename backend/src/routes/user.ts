@@ -62,6 +62,7 @@ userRouter.put('/profile', async (c) => {
       id: users.id,
       email: users.email,
       name: users.name,
+      preferredCurrency: users.preferredCurrency,
     });
 
   return c.json({ data: updated });
