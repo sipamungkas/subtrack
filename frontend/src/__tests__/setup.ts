@@ -30,16 +30,27 @@ Object.defineProperty(window, 'matchMedia', {
   })),
 })
 
+// Mock scrollIntoView for Radix UI compatibility with jsdom
+Element.prototype.scrollIntoView = vi.fn()
+
 // Mock ResizeObserver
-global.ResizeObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}))
+global.ResizeObserver = vi.fn().mockImplementation(function () {
+  return {
+    observe: vi.fn(),
+    unobserve: vi.fn(),
+    disconnect: vi.fn(),
+  }
+})
 
 // Mock IntersectionObserver
-global.IntersectionObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}))
+global.IntersectionObserver = vi.fn().mockImplementation(function () {
+  return {
+    observe: vi.fn(),
+    unobserve: vi.fn(),
+    disconnect: vi.fn(),
+  }
+})
+
+// Mock hasPointerCapture for Radix UI compatibility with jsdom
+EventTarget.prototype.hasPointerCapture = vi.fn()
+EventTarget.prototype.releasePointerCapture = vi.fn()

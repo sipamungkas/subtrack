@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '../test-utils'
 import userEvent from '@testing-library/user-event'
-import { SubscriptionNewPage } from '@/pages/SubscriptionNewPage'
+import { SubscriptionEditPage } from '@/pages/SubscriptionEditPage'
 
 // Mock useNavigate
 const mockNavigate = vi.fn()
@@ -13,15 +13,41 @@ vi.mock('react-router-dom', async () => {
   }
 })
 
-describe('SubscriptionNewPage', () => {
+// Mock hooks
+const mockSubscription = {
+  id: '1',
+  serviceName: 'Test Subscription',
+  cost: '10.00',
+  currency: 'USD',
+  renewalDate: '2026-02-01',
+  billingCycle: 'monthly' as const,
+  customIntervalDays: undefined,
+  paymentMethod: 'Credit Card',
+  accountName: 'test@example.com',
+  reminderDays: [7, 3, 1],
+  notes: '',
+  userId: '1',
+  createdAt: '2026-01-01T00:00:00Z',
+  updatedAt: '2026-01-01T00:00:00Z',
+}
+
+vi.mock('@/hooks/use-subscriptions', () => ({
+  useSubscription: vi.fn(() => ({ data: mockSubscription, isLoading: false })),
+  useUpdateSubscription: vi.fn(() => ({
+    mutateAsync: vi.fn(() => Promise.resolve()),
+    isPending: false,
+  })),
+}))
+
+describe('SubscriptionEditPage', () => {
   beforeEach(() => {
     mockNavigate.mockClear()
   })
 
-  it('renders the form', () => {
-    render(<SubscriptionNewPage />)
+  it('renders the form with existing data', () => {
+    render(<SubscriptionEditPage />)
 
-    expect(screen.getByRole('heading', { name: /add subscription/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /edit subscription/i })).toBeInTheDocument()
     expect(screen.getByLabelText(/service name/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/cost/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/payment method/i)).toBeInTheDocument()
@@ -29,47 +55,21 @@ describe('SubscriptionNewPage', () => {
   })
 
   it('shows back button to dashboard', () => {
-    render(<SubscriptionNewPage />)
+    render(<SubscriptionEditPage />)
 
     const backLink = screen.getByRole('link', { name: '' })
     expect(backLink).toHaveAttribute('href', '/dashboard')
   })
 
-  it('shows reminder day options', () => {
-    render(<SubscriptionNewPage />)
-
-    expect(screen.getByRole('button', { name: /1 day before/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /3 days before/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /7 days before/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /14 days before/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /30 days before/i })).toBeInTheDocument()
-  })
-
-  it('allows toggling reminder days', async () => {
+  it('submits the form with updated data', async () => {
     const user = userEvent.setup()
-    render(<SubscriptionNewPage />)
+    render(<SubscriptionEditPage />)
 
-    // 7, 3, and 1 days are selected by default
-    const day14Button = screen.getByRole('button', { name: /14 days before/i })
-    expect(day14Button).not.toHaveClass('bg-primary')
+    const serviceNameInput = screen.getByLabelText(/service name/i)
+    await user.clear(serviceNameInput)
+    await user.type(serviceNameInput, 'Updated Service')
 
-    await user.click(day14Button)
-
-    // After clicking, it should be selected (have primary variant styling)
-    expect(day14Button).toHaveClass('bg-primary')
-  })
-
-  it('submits the form with valid data', async () => {
-    const user = userEvent.setup()
-    render(<SubscriptionNewPage />)
-
-    await user.type(screen.getByLabelText(/service name/i), 'GitHub Pro')
-    await user.type(screen.getByLabelText(/cost/i), '4.00')
-    await user.type(screen.getByLabelText(/next renewal date/i), '2026-02-01')
-    await user.type(screen.getByLabelText(/payment method/i), 'Credit Card')
-    await user.type(screen.getByLabelText(/account\/email used/i), 'dev@example.com')
-
-    await user.click(screen.getByRole('button', { name: /create subscription/i }))
+    await user.click(screen.getByRole('button', { name: /save changes/i }))
 
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith('/dashboard')
@@ -77,7 +77,7 @@ describe('SubscriptionNewPage', () => {
   })
 
   it('shows cancel button that navigates back', () => {
-    render(<SubscriptionNewPage />)
+    render(<SubscriptionEditPage />)
 
     const cancelLink = screen.getByRole('link', { name: /cancel/i })
     expect(cancelLink).toHaveAttribute('href', '/dashboard')
@@ -86,7 +86,7 @@ describe('SubscriptionNewPage', () => {
   describe('Custom Interval Days', () => {
     it('shows custom interval field when billing cycle is custom', async () => {
       const user = userEvent.setup()
-      render(<SubscriptionNewPage />)
+      render(<SubscriptionEditPage />)
 
       expect(screen.queryByLabelText(/renewal interval \(days\)/i)).not.toBeInTheDocument()
 
@@ -100,7 +100,7 @@ describe('SubscriptionNewPage', () => {
 
     it('hides custom interval field for non-custom billing cycles', async () => {
       const user = userEvent.setup()
-      render(<SubscriptionNewPage />)
+      render(<SubscriptionEditPage />)
 
       const billingCycleLabel = screen.getByText(/billing cycle/i)
       const billingCycleSelect = billingCycleLabel.nextElementSibling as HTMLElement
@@ -117,7 +117,7 @@ describe('SubscriptionNewPage', () => {
 
     it('requires customIntervalDays when billing cycle is custom', async () => {
       const user = userEvent.setup()
-      render(<SubscriptionNewPage />)
+      render(<SubscriptionEditPage />)
 
       const billingCycleLabel = screen.getByText(/billing cycle/i)
       const billingCycleSelect = billingCycleLabel.nextElementSibling as HTMLElement
@@ -130,7 +130,7 @@ describe('SubscriptionNewPage', () => {
 
     it('prevents non-numeric input in custom interval field', async () => {
       const user = userEvent.setup()
-      render(<SubscriptionNewPage />)
+      render(<SubscriptionEditPage />)
 
       const billingCycleLabel = screen.getByText(/billing cycle/i)
       const billingCycleSelect = billingCycleLabel.nextElementSibling as HTMLElement
@@ -147,7 +147,7 @@ describe('SubscriptionNewPage', () => {
 
     it('allows valid numeric input in custom interval field', async () => {
       const user = userEvent.setup()
-      render(<SubscriptionNewPage />)
+      render(<SubscriptionEditPage />)
 
       const billingCycleLabel = screen.getByText(/billing cycle/i)
       const billingCycleSelect = billingCycleLabel.nextElementSibling as HTMLElement
@@ -161,16 +161,29 @@ describe('SubscriptionNewPage', () => {
         expect(customIntervalInput).toHaveValue(45)
       })
     })
+    })
+
+    it('allows valid numeric input in custom interval field', async () => {
+      const user = userEvent.setup()
+      render(<SubscriptionEditPage />)
+
+      const billingCycleLabel = screen.getByText(/billing cycle/i)
+      const billingCycleSelect = billingCycleSelect = billingCycleLabel.nextElementSibling as HTMLElement
+      await user.click(billingCycleSelect)
+      await user.click(screen.getByRole('option', { name: /custom/i }))
+
+      const customIntervalInput = screen.getByLabelText(/renewal interval \(days\)/i)
+      await user.type(customIntervalInput, '45')
+
+      await waitFor(() => {
+        expect(customIntervalInput).toHaveValue(45)
+      })
+    })
+    })
 
     it('submits form with customIntervalDays when billing cycle is custom', async () => {
       const user = userEvent.setup()
-      render(<SubscriptionNewPage />)
-
-      await user.type(screen.getByLabelText(/service name/i), 'Test Service')
-      await user.type(screen.getByLabelText(/cost/i), '10.00')
-      await user.type(screen.getByLabelText(/next renewal date/i), '2026-02-01')
-      await user.type(screen.getByLabelText(/payment method/i), 'Credit Card')
-      await user.type(screen.getByLabelText(/account\/email used/i), 'test@example.com')
+      render(<SubscriptionEditPage />)
 
       const billingCycleLabel = screen.getByText(/billing cycle/i)
       const billingCycleSelect = billingCycleLabel.nextElementSibling as HTMLElement
@@ -179,7 +192,7 @@ describe('SubscriptionNewPage', () => {
 
       await user.type(screen.getByLabelText(/renewal interval \(days\)/i), '30')
 
-      await user.click(screen.getByRole('button', { name: /create subscription/i }))
+      await user.click(screen.getByRole('button', { name: /save changes/i }))
 
       await waitFor(() => {
         expect(mockNavigate).toHaveBeenCalledWith('/dashboard')

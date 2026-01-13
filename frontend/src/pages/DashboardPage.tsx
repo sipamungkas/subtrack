@@ -5,6 +5,7 @@ import {
   useDeleteSubscription,
   useTestSubscriptionNotification,
 } from "@/hooks/use-subscriptions";
+import { useProfile } from "@/hooks/use-user";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -38,6 +39,8 @@ import {
   Coins,
   Eye,
   EyeOff,
+  MessageCircle,
+  X,
 } from "lucide-react";
 import { useState } from "react";
 import type { Subscription, CostBreakdown } from "@/types";
@@ -188,8 +191,10 @@ export function DashboardPage() {
     active: true,
   });
   const { data: stats, isLoading: statsLoading } = useSubscriptionStats();
+  const { data: profile } = useProfile();
   const deleteSubscription = useDeleteSubscription();
   const [showEmails, setShowEmails] = useState(false);
+  const [dismissedTelegramBanner, setDismissedTelegramBanner] = useState(false);
   const [deleteDialog, setDeleteDialog] = useState<{
     open: boolean;
     subscription: Subscription | null;
@@ -240,6 +245,36 @@ export function DashboardPage() {
           </Button>
         </Link>
       </div>
+
+      {/* Telegram Not Connected Banner */}
+      {!profile?.telegramChatId && !dismissedTelegramBanner && (
+        <div className="relative flex items-start gap-4 p-4 rounded-lg bg-warning/10 border border-warning/30">
+          <div className="flex items-center justify-center w-10 h-10 rounded-full bg-warning/20 shrink-0">
+            <MessageCircle className="h-5 w-5 text-warning" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-warning">Telegram not connected</h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              You won't receive renewal reminders until you connect your Telegram account.
+              Connect now to get notified before your subscriptions renew.
+            </p>
+            <Link to="/profile" className="inline-block mt-3">
+              <Button size="sm" variant="outline" className="gap-2">
+                <MessageCircle className="h-4 w-4" />
+                Connect Telegram
+              </Button>
+            </Link>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-2 right-2 h-8 w-8 text-muted-foreground hover:text-foreground"
+            onClick={() => setDismissedTelegramBanner(true)}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

@@ -194,10 +194,17 @@ export function SubscriptionNewPage() {
                   min="1"
                   placeholder="e.g., 45 for every 45 days"
                   value={formData.customIntervalDays || ''}
-                  onChange={(e) => setFormData((prev) => ({
-                    ...prev,
-                    customIntervalDays: e.target.value ? parseInt(e.target.value, 10) : undefined,
-                  }))}
+                  onChange={(e) => {
+                    const value = e.target.value
+                    const numValue = value ? parseInt(value, 10) : undefined
+                    if (value && isNaN(numValue!)) {
+                      return
+                    }
+                    setFormData((prev) => ({
+                      ...prev,
+                      customIntervalDays: numValue,
+                    }))
+                  }}
                   required
                   className="bg-background/50"
                 />
