@@ -58,6 +58,7 @@ export interface UserProfile {
   subscriptionLimit: number
   role: 'user' | 'admin'
   emailVerified: boolean
+  preferredCurrency?: string
 }
 
 export interface OTPResendStatus {
