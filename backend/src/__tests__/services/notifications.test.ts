@@ -1,28 +1,28 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-// Use vi.hoisted to avoid hoisting issues
-const { mockDb, mockSendTelegramMessage } = vi.hoisted(() => ({
-  mockDb: {
-    select: vi.fn().mockReturnThis(),
-    from: vi.fn().mockReturnThis(),
-    innerJoin: vi.fn().mockReturnThis(),
-    where: vi.fn().mockReturnThis(),
-    limit: vi.fn().mockReturnThis(),
-    insert: vi.fn().mockReturnThis(),
-    values: vi.fn().mockReturnThis(),
-  },
-  mockSendTelegramMessage: vi.fn(),
-}));
+const mockDb = {
+  select: vi.fn().mockReturnThis(),
+  from: vi.fn().mockReturnThis(),
+  innerJoin: vi.fn().mockReturnThis(),
+  where: vi.fn().mockReturnThis(),
+  limit: vi.fn().mockReturnThis(),
+  insert: vi.fn().mockReturnThis(),
+  values: vi.fn().mockReturnThis(),
+  update: vi.fn().mockReturnThis(),
+  set: vi.fn().mockReturnThis(),
+};
 
 vi.mock('../../db', () => ({
   db: mockDb,
 }));
 
+const mockSendTelegramMessage = vi.fn();
+
 vi.mock('../../lib/telegram', () => ({
   sendTelegramMessage: mockSendTelegramMessage,
 }));
 
-import { sendSubscriptionReminders, calculateNextRenewalDate, advancePassedRenewalDates } from '../../services/notifications';
+const { sendSubscriptionReminders, calculateNextRenewalDate, advancePassedRenewalDates } = await import('../../services/notifications');
 
 describe('Notification Service', () => {
   beforeEach(() => {

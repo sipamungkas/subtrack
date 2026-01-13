@@ -3,6 +3,7 @@ import { subscriptions, users, notificationLogs } from "../db/schema";
 import { eq, and, sql, lte, inArray } from "drizzle-orm";
 import { sendTelegramMessage } from "../lib/telegram";
 import { maskEmail } from "../lib/mask-email";
+import { addMonths, addQuarters, addYears, addDays, startOfDay, isBefore, format, differenceInDays } from "date-fns";
 
 interface SubscriptionWithUser {
   subscription: typeof subscriptions.$inferSelect;
@@ -14,33 +15,24 @@ export function calculateNextRenewalDate(
   billingCycle: string,
   customIntervalDays?: number | null
 ): Date {
-  const next = new Date(currentDate);
-
   switch (billingCycle) {
     case "monthly":
-      next.setMonth(next.getMonth() + 1);
-      break;
+      return addMonths(currentDate, 1);
     case "quarterly":
-      next.setMonth(next.getMonth() + 3);
-      break;
+      return addQuarters(currentDate, 1);
     case "yearly":
-      next.setFullYear(next.getFullYear() + 1);
-      break;
+      return addYears(currentDate, 1);
     case "custom":
-      if (customIntervalDays) {
-        next.setDate(next.getDate() + customIntervalDays);
-      }
-      break;
+      return customIntervalDays ? addDays(currentDate, customIntervalDays) : currentDate;
+    default:
+      throw new Error(`Unknown billing cycle: ${billingCycle}`);
   }
-
-  return next;
 }
 
 export async function advancePassedRenewalDates(): Promise<void> {
   console.log("📅 Checking for passed renewal dates...");
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = startOfDay(new Date());
 
   // Get all active subscriptions with passed renewal dates
   const passedSubscriptions = await db
@@ -49,7 +41,7 @@ export async function advancePassedRenewalDates(): Promise<void> {
     .where(
       and(
         eq(subscriptions.isActive, true),
-        sql`${subscriptions.renewalDate} < ${today.toISOString().split("T")[0]}`
+        sql`${subscriptions.renewalDate} < ${format(today, 'yyyy-MM-dd')}`
       )
     );
 
@@ -64,7 +56,7 @@ export async function advancePassedRenewalDates(): Promise<void> {
     let renewalDate = new Date(subscription.renewalDate);
 
     // Keep advancing until we reach a future date
-    while (renewalDate < today) {
+    while (isBefore(renewalDate, today)) {
       renewalDate = calculateNextRenewalDate(
         renewalDate,
         subscription.billingCycle,
@@ -76,7 +68,7 @@ export async function advancePassedRenewalDates(): Promise<void> {
     await db
       .update(subscriptions)
       .set({
-        renewalDate: renewalDate.toISOString().split("T")[0],
+        renewalDate: format(renewalDate, 'yyyy-MM-dd'),
         updatedAt: new Date(),
       })
       .where(eq(subscriptions.id, subscription.id));
@@ -94,8 +86,7 @@ export async function sendSubscriptionReminders(): Promise<void> {
     // First, advance any passed renewal dates
     await advancePassedRenewalDates();
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const today = startOfDay(new Date());
 
     // Get all active subscriptions with users
     const activeSubscriptions = await db
@@ -118,9 +109,7 @@ export async function sendSubscriptionReminders(): Promise<void> {
 
     for (const { subscription, user } of activeSubscriptions) {
       const renewalDate = new Date(subscription.renewalDate);
-      const daysUntilRenewal = Math.ceil(
-        (renewalDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
-      );
+      const daysUntilRenewal = differenceInDays(renewalDate, today);
 
       // Check if we should send reminder for this subscription
       if (!subscription.reminderDays.includes(daysUntilRenewal)) {
@@ -135,7 +124,7 @@ export async function sendSubscriptionReminders(): Promise<void> {
           and(
             eq(notificationLogs.subscriptionId, subscription.id),
             eq(notificationLogs.daysBefore, daysUntilRenewal),
-            sql`DATE(${notificationLogs.sentAt}) = DATE(${today.toISOString()})`
+            sql`DATE(${notificationLogs.sentAt}) = DATE(${format(today, 'yyyy-MM-dd')})`
           )
         )
         .limit(1);
