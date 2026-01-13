@@ -1,8 +1,8 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
-import path from 'path'
-import { partytownVite } from '@builder.io/partytown/utils'
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
+import path from "path";
+import { partytownVite } from "@qwik.dev/partytown/utils";
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -10,15 +10,15 @@ export default defineConfig({
     react(),
     tailwindcss(),
     partytownVite({
-      dest: path.resolve(__dirname, 'dist', '~partytown'),
+      dest: path.resolve(__dirname, "dist", "~partytown"),
     }),
     {
-      name: 'inject-partytown-analytics',
+      name: "inject-partytown-analytics",
       transformIndexHtml(html, ctx) {
-        if (ctx.server) return html // Skip in dev mode
+        if (ctx.server) return html; // Skip in dev mode
 
         return html.replace(
-          '</head>',
+          "</head>",
           `
     <!-- Partytown config + snippet -->
     <script>
@@ -40,22 +40,22 @@ export default defineConfig({
     <!-- Umami Analytics -->
     <script type="text/partytown" defer src="https://umami.awans.id/script.js" data-website-id="f510a727-c8bb-410b-a3f7-fa1f0a8e184b"></script>
   </head>`
-        )
+        );
       },
     },
   ],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      "@": path.resolve(__dirname, "./src"),
     },
   },
   server: {
     port: 5173,
     proxy: {
-      '/api': {
-        target: 'http://localhost:3000',
+      "/api": {
+        target: "http://localhost:3000",
         changeOrigin: true,
       },
     },
   },
-})
+});
