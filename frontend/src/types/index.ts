@@ -6,6 +6,7 @@ export interface Subscription {
   cost: string
   currency: string
   billingCycle: 'monthly' | 'yearly' | 'quarterly' | 'custom'
+  customIntervalDays?: number | null
   paymentMethod: string
   accountName: string
   reminderDays: number[]
@@ -111,6 +112,7 @@ export interface CreateSubscriptionInput {
   cost: string
   currency?: string
   billingCycle?: 'monthly' | 'yearly' | 'quarterly' | 'custom'
+  customIntervalDays?: number
   paymentMethod: string
   accountName: string
   reminderDays?: number[]

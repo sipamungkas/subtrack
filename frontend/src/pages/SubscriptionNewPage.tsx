@@ -42,7 +42,8 @@ export function SubscriptionNewPage() {
     renewalDate: '',
     cost: '',
     currency: 'USD',
-    billingCycle: 'monthly' as const,
+    billingCycle: 'monthly' as 'monthly' | 'yearly' | 'quarterly' | 'custom',
+    customIntervalDays: undefined as number | undefined,
     paymentMethod: '',
     accountName: '',
     reminderDays: [7, 3, 1],
@@ -152,7 +153,11 @@ export function SubscriptionNewPage() {
                 <Label htmlFor="billingCycle">Billing Cycle</Label>
                 <Select
                   value={formData.billingCycle}
-                  onValueChange={(value) => setFormData((prev) => ({ ...prev, billingCycle: value as typeof formData.billingCycle }))}
+                  onValueChange={(value) => setFormData((prev) => ({
+                    ...prev,
+                    billingCycle: value as typeof formData.billingCycle,
+                    customIntervalDays: value === 'custom' ? prev.customIntervalDays : undefined,
+                  }))}
                 >
                   <SelectTrigger className="bg-background/50">
                     <SelectValue />
@@ -178,6 +183,29 @@ export function SubscriptionNewPage() {
                 />
               </div>
             </div>
+
+            {/* Custom Interval Days - shown only when billing cycle is custom */}
+            {formData.billingCycle === 'custom' && (
+              <div className="space-y-2">
+                <Label htmlFor="customIntervalDays">Renewal Interval (days) *</Label>
+                <Input
+                  id="customIntervalDays"
+                  type="number"
+                  min="1"
+                  placeholder="e.g., 45 for every 45 days"
+                  value={formData.customIntervalDays || ''}
+                  onChange={(e) => setFormData((prev) => ({
+                    ...prev,
+                    customIntervalDays: e.target.value ? parseInt(e.target.value, 10) : undefined,
+                  }))}
+                  required
+                  className="bg-background/50"
+                />
+                <p className="text-xs text-muted-foreground">
+                  How many days between each renewal
+                </p>
+              </div>
+            )}
 
             {/* Payment Method */}
             <div className="space-y-2">

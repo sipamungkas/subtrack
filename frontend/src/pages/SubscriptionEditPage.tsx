@@ -73,6 +73,7 @@ export function SubscriptionEditPage() {
     cost: "",
     currency: "USD",
     billingCycle: "monthly" as "monthly" | "yearly" | "quarterly" | "custom",
+    customIntervalDays: undefined as number | undefined,
     paymentMethod: "",
     accountName: "",
     reminderDays: [7, 3, 1] as number[],
@@ -93,6 +94,7 @@ export function SubscriptionEditPage() {
         cost: subscription.cost,
         currency,
         billingCycle,
+        customIntervalDays: subscription.customIntervalDays ?? undefined,
         paymentMethod: subscription.paymentMethod,
         accountName: subscription.accountName,
         reminderDays: subscription.reminderDays,
@@ -247,6 +249,7 @@ export function SubscriptionEditPage() {
                       setFormData((prev) => ({
                         ...prev,
                         billingCycle: value,
+                        customIntervalDays: value === 'custom' ? prev.customIntervalDays : undefined,
                       }));
                     }
                   }}
@@ -280,6 +283,29 @@ export function SubscriptionEditPage() {
                 />
               </div>
             </div>
+
+            {/* Custom Interval Days - shown only when billing cycle is custom */}
+            {formData.billingCycle === 'custom' && (
+              <div className="space-y-2">
+                <Label htmlFor="customIntervalDays">Renewal Interval (days) *</Label>
+                <Input
+                  id="customIntervalDays"
+                  type="number"
+                  min="1"
+                  placeholder="e.g., 45 for every 45 days"
+                  value={formData.customIntervalDays || ''}
+                  onChange={(e) => setFormData((prev) => ({
+                    ...prev,
+                    customIntervalDays: e.target.value ? parseInt(e.target.value, 10) : undefined,
+                  }))}
+                  required
+                  className="bg-background/50"
+                />
+                <p className="text-xs text-muted-foreground">
+                  How many days between each renewal
+                </p>
+              </div>
+            )}
 
             {/* Payment Method */}
             <div className="space-y-2">
