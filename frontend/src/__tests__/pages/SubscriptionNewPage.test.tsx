@@ -76,14 +76,33 @@ describe('SubscriptionNewPage', () => {
     })
   })
 
-  it('shows cancel button that navigates back', () => {
-    render(<SubscriptionNewPage />)
+    it('shows cancel button that navigates back', () => {
+      render(<SubscriptionNewPage />)
 
     const cancelLink = screen.getByRole('link', { name: /cancel/i })
     expect(cancelLink).toHaveAttribute('href', '/dashboard')
   })
 
   describe('Custom Interval Days', () => {
+    it('clears customIntervalDays when switching away from custom billing cycle', async () => {
+      const user = userEvent.setup()
+      render(<SubscriptionNewPage />)
+
+      const billingCycleLabel = screen.getByText(/billing cycle/i)
+      const billingCycleSelect = billingCycleLabel.nextElementSibling as HTMLElement
+      await user.click(billingCycleSelect)
+      await user.click(screen.getByRole('option', { name: /custom/i }))
+
+      const customIntervalInput = screen.getByLabelText(/renewal interval \(days\)/i)
+      await user.type(customIntervalInput, '45')
+
+      expect(customIntervalInput).toHaveValue(45)
+
+      await user.click(billingCycleSelect)
+      await user.click(screen.getByRole('option', { name: /monthly/i }))
+
+      expect(screen.queryByLabelText(/renewal interval \(days\)/i)).not.toBeInTheDocument()
+    })
     it('shows custom interval field when billing cycle is custom', async () => {
       const user = userEvent.setup()
       render(<SubscriptionNewPage />)
@@ -140,8 +159,8 @@ describe('SubscriptionNewPage', () => {
       await user.type(screen.getByLabelText(/renewal interval \(days\)/i), 'abc')
 
       await waitFor(() => {
-        const customIntervalInput = screen.getByLabelText(/renewal interval \(days\)/i)
-        expect(customIntervalInput).toHaveValue('')
+        const customIntervalInput = screen.getByLabelText(/renewal interval \(days\)/i, { exact: false })
+        expect(customIntervalInput.value).toBe('')
       })
     })
 
@@ -157,8 +176,8 @@ describe('SubscriptionNewPage', () => {
       await user.type(screen.getByLabelText(/renewal interval \(days\)/i), '45')
 
       await waitFor(() => {
-        const customIntervalInput = screen.getByLabelText(/renewal interval \(days\)/i)
-        expect(customIntervalInput).toHaveValue(45)
+        const customIntervalInput = screen.getByLabelText(/renewal interval \(days\)/i, { exact: false })
+        expect(customIntervalInput.value).toBe(45)
       })
     })
 
