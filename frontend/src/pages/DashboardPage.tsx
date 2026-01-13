@@ -105,9 +105,10 @@ function SubscriptionCard({
   };
 
   // Mask account name if it looks like an email and showEmail is false
-  const displayAccountName = subscription.accountName.includes("@") && !showEmail
-    ? maskEmail(subscription.accountName)
-    : subscription.accountName;
+  const displayAccountName =
+    subscription.accountName.includes("@") && !showEmail
+      ? maskEmail(subscription.accountName)
+      : subscription.accountName;
 
   return (
     <Card className="card-hover group">
@@ -194,7 +195,12 @@ export function DashboardPage() {
   const { data: profile } = useProfile();
   const deleteSubscription = useDeleteSubscription();
   const [showEmails, setShowEmails] = useState(false);
-  const [dismissedTelegramBanner, setDismissedTelegramBanner] = useState(false);
+  const [dismissedTelegramBanner, setDismissedTelegramBanner] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("dismissedTelegramBanner") === "true";
+    }
+    return false;
+  });
   const [deleteDialog, setDeleteDialog] = useState<{
     open: boolean;
     subscription: Subscription | null;
@@ -253,10 +259,13 @@ export function DashboardPage() {
             <MessageCircle className="h-5 w-5 text-warning" />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-warning">Telegram not connected</h3>
+            <h3 className="font-semibold text-warning">
+              Telegram not connected
+            </h3>
             <p className="text-sm text-muted-foreground mt-1">
-              You won't receive renewal reminders until you connect your Telegram account.
-              Connect now to get notified before your subscriptions renew.
+              You won't receive renewal reminders until you connect your
+              Telegram account. Connect now to get notified before your
+              subscriptions renew.
             </p>
             <Link to="/profile" className="inline-block mt-3">
               <Button size="sm" variant="outline" className="gap-2">
@@ -269,7 +278,10 @@ export function DashboardPage() {
             variant="ghost"
             size="icon"
             className="absolute top-2 right-2 h-8 w-8 text-muted-foreground hover:text-foreground"
-            onClick={() => setDismissedTelegramBanner(true)}
+            onClick={() => {
+              setDismissedTelegramBanner(true);
+              localStorage.setItem("dismissedTelegramBanner", "true");
+            }}
           >
             <X className="h-4 w-4" />
           </Button>
@@ -350,7 +362,8 @@ export function DashboardPage() {
               Your subscriptions across different currencies
               {stats.ratesUpdatedAt && (
                 <span className="ml-2 text-xs">
-                  (Rates updated: {new Date(stats.ratesUpdatedAt).toLocaleDateString()})
+                  (Rates updated:{" "}
+                  {new Date(stats.ratesUpdatedAt).toLocaleDateString()})
                 </span>
               )}
             </CardDescription>
@@ -368,7 +381,8 @@ export function DashboardPage() {
                     </Badge>
                   </div>
                   <p className="text-lg font-semibold">
-                    {item.currency === "USD" ? "$" : ""}{item.amount.toFixed(2)}
+                    {item.currency === "USD" ? "$" : ""}
+                    {item.amount.toFixed(2)}
                   </p>
                   {item.currency !== "USD" && (
                     <p className="text-xs text-muted-foreground">
