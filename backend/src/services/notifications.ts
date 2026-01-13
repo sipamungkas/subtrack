@@ -9,10 +9,91 @@ interface SubscriptionWithUser {
   user: typeof users.$inferSelect;
 }
 
+export function calculateNextRenewalDate(
+  currentDate: Date,
+  billingCycle: string,
+  customIntervalDays?: number | null
+): Date {
+  const next = new Date(currentDate);
+
+  switch (billingCycle) {
+    case "monthly":
+      next.setMonth(next.getMonth() + 1);
+      break;
+    case "quarterly":
+      next.setMonth(next.getMonth() + 3);
+      break;
+    case "yearly":
+      next.setFullYear(next.getFullYear() + 1);
+      break;
+    case "custom":
+      if (customIntervalDays) {
+        next.setDate(next.getDate() + customIntervalDays);
+      }
+      break;
+  }
+
+  return next;
+}
+
+export async function advancePassedRenewalDates(): Promise<void> {
+  console.log("📅 Checking for passed renewal dates...");
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // Get all active subscriptions with passed renewal dates
+  const passedSubscriptions = await db
+    .select()
+    .from(subscriptions)
+    .where(
+      and(
+        eq(subscriptions.isActive, true),
+        sql`${subscriptions.renewalDate} < ${today.toISOString().split("T")[0]}`
+      )
+    );
+
+  let advancedCount = 0;
+
+  for (const subscription of passedSubscriptions) {
+    // Skip custom subscriptions without interval
+    if (subscription.billingCycle === "custom" && !subscription.customIntervalDays) {
+      continue;
+    }
+
+    let renewalDate = new Date(subscription.renewalDate);
+
+    // Keep advancing until we reach a future date
+    while (renewalDate < today) {
+      renewalDate = calculateNextRenewalDate(
+        renewalDate,
+        subscription.billingCycle,
+        subscription.customIntervalDays
+      );
+    }
+
+    // Update the subscription
+    await db
+      .update(subscriptions)
+      .set({
+        renewalDate: renewalDate.toISOString().split("T")[0],
+        updatedAt: new Date(),
+      })
+      .where(eq(subscriptions.id, subscription.id));
+
+    advancedCount++;
+  }
+
+  console.log(`📅 Advanced ${advancedCount} subscription renewal dates`);
+}
+
 export async function sendSubscriptionReminders(): Promise<void> {
   console.log("🔔 Running subscription reminder check...");
 
   try {
+    // First, advance any passed renewal dates
+    await advancePassedRenewalDates();
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
