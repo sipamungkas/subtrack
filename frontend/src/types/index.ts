@@ -58,7 +58,7 @@ export interface UserProfile {
   subscriptionLimit: number
   role: 'user' | 'admin'
   emailVerified: boolean
-  preferredCurrency?: string
+  preferredCurrency: 'USD' | 'EUR' | 'GBP' | 'IDR' | 'AUD' | 'SGD'
 }
 
 export interface OTPResendStatus {

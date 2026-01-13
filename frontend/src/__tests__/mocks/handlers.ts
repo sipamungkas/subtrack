@@ -10,6 +10,7 @@ export const mockUser: UserProfile = {
   subscriptionLimit: 15,
   role: 'user',
   emailVerified: true,
+  preferredCurrency: 'USD',
 }
 
 export const mockAdminUser: UserProfile = {
@@ -20,6 +21,7 @@ export const mockAdminUser: UserProfile = {
   subscriptionLimit: 100,
   role: 'admin',
   emailVerified: true,
+  preferredCurrency: 'USD',
 }
 
 export const mockSubscriptions: Subscription[] = [
