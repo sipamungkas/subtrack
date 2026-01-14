@@ -58,8 +58,10 @@ describe('Currency Preference E2E', () => {
     const saveButton = screen.getByRole('button', { name: /save changes/i });
     await user.click(saveButton);
 
-    // Verify save action is complete (button still exists and is clickable)
-    expect(saveButton).toBeInTheDocument();
+    // Verify success toast appears
+    await waitFor(() => {
+      expect(screen.getByText('Profile updated successfully')).toBeInTheDocument();
+    });
   });
 
   it('should reflect currency change in dashboard', async () => {
