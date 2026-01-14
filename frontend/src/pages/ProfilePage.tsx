@@ -10,6 +10,8 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { toast } from '@/hooks/use-toast'
 import { maskEmail } from '@/lib/utils/mask-email'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { SUPPORTED_CURRENCIES, getCurrencySymbol } from '@/lib/utils/currency'
 import {
   User,
   Mail,
@@ -38,11 +40,15 @@ export function ProfilePage() {
   const [name, setName] = useState(user?.name || '')
   const [telegramCode, setTelegramCode] = useState<{ code: string; message: string } | null>(null)
   const [copied, setCopied] = useState(false)
+  const [preferredCurrency, setPreferredCurrency] = useState(profile?.preferredCurrency || 'USD')
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      await updateProfile.mutateAsync({ name })
+      await updateProfile.mutateAsync({
+        name,
+        preferredCurrency,
+      })
       await refreshUser()
       toast({ title: 'Success', description: 'Profile updated successfully' })
     } catch {
@@ -140,6 +146,25 @@ export function ProfilePage() {
                 placeholder="Your name"
                 className="bg-background/50"
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="currency">Preferred Currency</Label>
+              <Select value={preferredCurrency} onValueChange={(value) => setPreferredCurrency(value as 'USD' | 'EUR' | 'GBP' | 'IDR' | 'AUD' | 'SGD')}>
+                <SelectTrigger id="currency" className="bg-background/50">
+                  <SelectValue placeholder="Select currency" />
+                </SelectTrigger>
+                <SelectContent>
+                  {SUPPORTED_CURRENCIES.map((currency) => (
+                    <SelectItem key={currency} value={currency}>
+                      {currency} {getCurrencySymbol(currency)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Dashboard stats will be displayed in this currency
+              </p>
             </div>
 
             <Button type="submit" disabled={updateProfile.isPending} className="gap-2">
