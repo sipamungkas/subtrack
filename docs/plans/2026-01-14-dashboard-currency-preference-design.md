@@ -139,3 +139,31 @@ export function getCurrencySymbol(currency: string): string {
 - If exchange rates are unavailable, fallback to displaying in USD
 - If currency conversion fails, show original USD amount with warning
 - Validate currency codes on backend to prevent invalid values
+
+## Implementation Notes
+
+### Exchange Rate Caching
+- Exchange rates are cached for 1 hour in the frontend
+- Backend refreshes rates daily via cron job
+- Rates are USD-based (conversion goes through USD)
+
+### Fallback Behavior
+- If exchange rates are unavailable, dashboard shows original USD amounts
+- If conversion fails for a specific currency, logs warning and shows original amount
+- Default currency is USD for all users
+
+### Currency Symbols
+- USD: $
+- EUR: €
+- GBP: £
+- IDR: Rp
+- AUD: A$
+- SGD: S$
+
+### Testing
+- Unit tests for currency utilities (getCurrencySymbol, formatCurrency)
+- Unit tests for currency converter hook (useCurrencyConverter)
+- Integration tests for API endpoints (GET/PUT profile with preferredCurrency)
+- Component tests for Profile page currency selector
+- Component tests for Dashboard page currency conversion
+- E2E tests for complete currency preference flow
