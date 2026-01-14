@@ -105,7 +105,7 @@ subscriptionRouter.get("/stats", async (c) => {
     byCurrency[currency] = (byCurrency[currency] || 0) + monthlyCost;
   }
 
-  // Convert each currency to USD
+  // Convert each currency to USD first
   let totalMonthlyCostUSD = 0;
   for (const [currency, amount] of Object.entries(byCurrency)) {
     const convertedToUSD = await convertAmount(amount, currency, "USD");
@@ -116,6 +116,12 @@ subscriptionRouter.get("/stats", async (c) => {
     });
     totalMonthlyCostUSD += convertedToUSD;
   }
+
+  // Get user's preferred currency and convert total to it
+  const preferredCurrency = (user as any).preferredCurrency || "USD";
+  const totalMonthlyCost = preferredCurrency === "USD" 
+    ? totalMonthlyCostUSD 
+    : await convertAmount(totalMonthlyCostUSD, "USD", preferredCurrency);
 
   // Get upcoming renewals (next 30 days)
   const today = new Date();
@@ -136,12 +142,12 @@ subscriptionRouter.get("/stats", async (c) => {
     data: {
       totalSubscriptions: userSubscriptions.length,
       monthlyCost: {
-        amount: Math.round(totalMonthlyCostUSD * 100) / 100,
-        currency: "USD",
+        amount: Math.round(totalMonthlyCost * 100) / 100,
+        currency: preferredCurrency,
       },
       yearlyCost: {
-        amount: Math.round(totalMonthlyCostUSD * 12 * 100) / 100,
-        currency: "USD",
+        amount: Math.round(totalMonthlyCost * 12 * 100) / 100,
+        currency: preferredCurrency,
       },
       upcomingRenewalsCount: upcomingRenewals.length,
       upcomingRenewals,

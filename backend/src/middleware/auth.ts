@@ -11,7 +11,12 @@ export const requireAuth = async (c: Context, next: Next) => {
     return c.json({ error: 'UNAUTHORIZED', message: 'Authentication required' }, 401);
   }
 
-  c.set('user', session.user);
+  const [dbUser] = await db
+    .select({ preferredCurrency: users.preferredCurrency })
+    .from(users)
+    .where(eq(users.id, session.user.id));
+
+  c.set('user', { ...session.user, preferredCurrency: dbUser?.preferredCurrency || 'USD' });
   c.set('session', session.session);
   await next();
 };
