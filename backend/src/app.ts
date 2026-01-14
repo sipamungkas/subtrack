@@ -10,11 +10,13 @@ import currenciesRouter from './routes/currencies';
 
 const app = new Hono();
 
-const allowedOrigins = (process.env.ALLOWED_ORIGINS || process.env.FRONTEND_URL || 'http://localhost:5173').split(',');
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || process.env.FRONTEND_URL || 'http://localhost:5173')
+  .split(',')
+  .map(origin => origin.trim());
 
 app.use('*', logger());
 app.use('*', cors({
-  origin: (origin) => allowedOrigins.includes(origin),
+  origin: (origin) => origin ? allowedOrigins.includes(origin) : allowedOrigins[0],
   credentials: true,
 }));
 
