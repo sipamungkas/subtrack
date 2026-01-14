@@ -7,7 +7,7 @@ import {
 } from "@/hooks/use-subscriptions";
 import { useProfile } from "@/hooks/use-user";
 import { useCurrencyConverter } from '@/hooks/use-currency-converter';
-import { getCurrencySymbol, formatCurrency } from '@/lib/utils/currency';
+import { formatCurrency } from '@/lib/utils/currency';
 import { Button } from "@/components/ui/button";
 import {
   Card,
