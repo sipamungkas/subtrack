@@ -6,8 +6,6 @@ import cron from "node-cron";
 
 const port = parseInt(process.env.PORT || "3000");
 
-console.log(`🚀 Server running on http://localhost:${port}`);
-
 // Start Telegram bot
 startBot().catch(console.error);
 
@@ -60,18 +58,22 @@ if (process.env.NODE_ENV === "development") {
   setTimeout(() => refreshExchangeRates(), 2000);
 }
 
+// Start the HTTP server explicitly
+const server = Bun.serve({
+  port,
+  fetch: app.fetch,
+  hostname: "0.0.0.0",
+});
+
+console.log(`✅ Server listening on http://${server.hostname}:${server.port}`);
+
 // Graceful shutdown
 process.on("SIGINT", async () => {
   console.log("\n🛑 Shutting down...");
+  server.stop();
   currencyJob.stop();
   notificationJob.stop();
   pruneJob.stop();
   await stopBot();
   process.exit(0);
 });
-
-export default {
-  port,
-  fetch: app.fetch,
-  hostname: "0.0.0.0",
-};
