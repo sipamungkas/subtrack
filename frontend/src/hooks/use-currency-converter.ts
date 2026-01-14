@@ -22,7 +22,13 @@ export function useCurrencyConverter() {
     fromCurrency: string,
     toCurrency: string
   ): number => {
-    if (fromCurrency === toCurrency) {
+    // Validate input
+    if (isNaN(amount) || amount < 0) {
+      console.warn(`Invalid amount: ${amount}`);
+      return amount;
+    }
+
+    if (fromCurrency === toCurrency || amount === 0) {
       return amount;
     }
 
