@@ -61,9 +61,9 @@ EXPOSE 3000
 ENV NODE_ENV=production
 ENV PORT=3000
 
-# Health check
+# Health check (use 127.0.0.1 to force IPv4, alpine wget defaults to IPv6)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1
+    CMD wget --no-verbose --tries=1 --spider http://127.0.0.1:3000/health || exit 1
 
 # Start the application (runs migrations first, then starts server)
 CMD ["./scripts/start.sh"]
