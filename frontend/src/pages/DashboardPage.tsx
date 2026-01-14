@@ -6,6 +6,8 @@ import {
   useTestSubscriptionNotification,
 } from "@/hooks/use-subscriptions";
 import { useProfile } from "@/hooks/use-user";
+import { useCurrencyConverter } from '@/hooks/use-currency-converter';
+import { getCurrencySymbol, formatCurrency } from '@/lib/utils/currency';
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -193,6 +195,7 @@ export function DashboardPage() {
   });
   const { data: stats, isLoading: statsLoading } = useSubscriptionStats();
   const { data: profile, isLoading: profileLoading } = useProfile();
+  const { convert, isLoading: ratesLoading } = useCurrencyConverter();
   const deleteSubscription = useDeleteSubscription();
   const [showEmails, setShowEmails] = useState(false);
   const [dismissedTelegramBanner, setDismissedTelegramBanner] = useState(() => {
@@ -235,6 +238,16 @@ export function DashboardPage() {
       </div>
     );
   }
+
+  const preferredCurrency = profile?.preferredCurrency || 'USD';
+
+  const convertedMonthlyCost = stats?.monthlyCost?.amount
+    ? convert(stats.monthlyCost.amount, stats.monthlyCost.currency, preferredCurrency)
+    : 0;
+
+  const convertedYearlyCost = stats?.yearlyCost?.amount
+    ? convert(stats.yearlyCost.amount, stats.yearlyCost.currency, preferredCurrency)
+    : 0;
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -315,9 +328,13 @@ export function DashboardPage() {
           </CardHeader>
           <CardContent>
             <p className="text-4xl font-bold">
-              ${stats?.monthlyCost?.amount?.toFixed(2) || "0.00"}
+              {ratesLoading ? (
+                <Loader2 className="h-8 w-8 animate-spin" />
+              ) : (
+                formatCurrency(convertedMonthlyCost, preferredCurrency)
+              )}
             </p>
-            <p className="text-xs text-muted-foreground">USD equivalent</p>
+            <p className="text-xs text-muted-foreground">{preferredCurrency} equivalent</p>
           </CardContent>
         </Card>
 
@@ -330,9 +347,13 @@ export function DashboardPage() {
           </CardHeader>
           <CardContent>
             <p className="text-4xl font-bold">
-              ${stats?.yearlyCost?.amount?.toFixed(2) || "0.00"}
+              {ratesLoading ? (
+                <Loader2 className="h-8 w-8 animate-spin" />
+              ) : (
+                formatCurrency(convertedYearlyCost, preferredCurrency)
+              )}
             </p>
-            <p className="text-xs text-muted-foreground">USD equivalent</p>
+            <p className="text-xs text-muted-foreground">{preferredCurrency} equivalent</p>
           </CardContent>
         </Card>
 
