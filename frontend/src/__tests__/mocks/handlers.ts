@@ -315,4 +315,21 @@ export const handlers = [
       data: { ...user, isActive: body.isActive },
     })
   }),
+
+  // Currency rates handler
+  http.get('/api/currencies/rates', () => {
+    return HttpResponse.json({
+      data: {
+        base: 'USD',
+        rates: {
+          EUR: 0.85,
+          GBP: 0.73,
+          IDR: 15000,
+          AUD: 1.35,
+          SGD: 1.32,
+        },
+        updatedAt: new Date().toISOString(),
+      },
+    })
+  }),
 ]
