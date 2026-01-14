@@ -16,7 +16,10 @@ const allowedOrigins = (process.env.ALLOWED_ORIGINS || process.env.FRONTEND_URL 
 
 app.use('*', logger());
 app.use('*', cors({
-  origin: (origin) => origin ? allowedOrigins.includes(origin) : allowedOrigins[0],
+  origin: (origin) => {
+    if (!origin) return allowedOrigins[0];
+    return allowedOrigins.includes(origin) ? origin : null;
+  },
   credentials: true,
 }));
 
