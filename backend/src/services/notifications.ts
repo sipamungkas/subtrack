@@ -41,7 +41,7 @@ export async function advancePassedRenewalDates(): Promise<void> {
     .where(
       and(
         eq(subscriptions.isActive, true),
-        sql`${subscriptions.renewalDate} < ${format(today, 'yyyy-MM-dd')}`
+        sql`${subscriptions.renewalDate} <= ${format(today, 'yyyy-MM-dd')}`
       )
     );
 
@@ -56,7 +56,7 @@ export async function advancePassedRenewalDates(): Promise<void> {
     let renewalDate = new Date(subscription.renewalDate);
 
     // Keep advancing until we reach a future date
-    while (isBefore(renewalDate, today)) {
+    while (!isBefore(today, renewalDate)) {
       renewalDate = calculateNextRenewalDate(
         renewalDate,
         subscription.billingCycle,
