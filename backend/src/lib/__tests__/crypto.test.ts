@@ -164,7 +164,7 @@ describe("Crypto Utilities", () => {
       expect(isEncrypted("")).toBe(false);
     });
 
-    it("returns false for values starting with 'enc:' but not encrypted", () => {
+    it("returns true for values starting with 'enc:' regardless of format", () => {
       expect(isEncrypted("enc:not-really-encrypted")).toBe(true);
     });
 
@@ -263,6 +263,94 @@ describe("Crypto Utilities", () => {
       const iv = Buffer.from(parts[1], 'base64');
       
       expect(iv.length).toBe(16);
+    });
+  });
+
+  describe("error handling", () => {
+    it("throws error for malformed encrypted string (missing parts)", () => {
+      const malformed = "enc:ivonly";
+      
+      expect(() => {
+        decryptAccountName(malformed, testUserId);
+      }).toThrow("Invalid encrypted format");
+    });
+
+    it("throws error for malformed encrypted string (extra parts)", () => {
+      const malformed = "enc:iv:ciphertext:authtag:extra";
+      
+      expect(() => {
+        decryptAccountName(malformed, testUserId);
+      }).toThrow("Invalid encrypted format");
+    });
+
+    it("throws error for invalid base64 in IV", () => {
+      const invalid = "enc:not!base64:ciphertext:authtag";
+      
+      expect(() => {
+        decryptAccountName(invalid, testUserId);
+      }).toThrow("Decryption failed");
+    });
+
+    it("throws error for invalid base64 in ciphertext", () => {
+      const invalid = `enc:${Buffer.from('a'.repeat(16)).toString('base64')}:not!base64:authtag`;
+      
+      expect(() => {
+        decryptAccountName(invalid, testUserId);
+      }).toThrow("Decryption failed");
+    });
+
+    it("throws error for invalid base64 in auth tag", () => {
+      const invalid = `enc:${Buffer.from('a'.repeat(16)).toString('base64')}:${Buffer.from('test').toString('base64')}:not!base64`;
+      
+      expect(() => {
+        decryptAccountName(invalid, testUserId);
+      }).toThrow("Decryption failed");
+    });
+
+    it("throws error for corrupted auth tag", () => {
+      const encrypted = encryptAccountName(testPlaintext, testUserId);
+      const parts = encrypted.split(':');
+      
+      const corrupted = `${parts[0]}:${parts[1]}:${parts[2]}:${Buffer.from('wrongauthtag').toString('base64')}`;
+      
+      expect(() => {
+        decryptAccountName(corrupted, testUserId);
+      }).toThrow("Decryption failed");
+    });
+
+    it("throws error for wrong key (wrong user)", () => {
+      const encrypted = encryptAccountName(testPlaintext, testUserId);
+      
+      expect(() => {
+        decryptAccountName(encrypted, anotherUserId);
+      }).toThrow("Decryption failed");
+    });
+
+    it("throws error for corrupted ciphertext", () => {
+      const encrypted = encryptAccountName(testPlaintext, testUserId);
+      const parts = encrypted.split(':');
+      
+      const corrupted = `${parts[0]}:${parts[1]}:${Buffer.from('corrupted').toString('base64')}:${parts[3]}`;
+      
+      expect(() => {
+        decryptAccountName(corrupted, testUserId);
+      }).toThrow("Decryption failed");
+    });
+
+    it("throws error for empty IV", () => {
+      const invalid = `enc::${Buffer.from('test').toString('base64')}:${Buffer.from('auth').toString('base64')}`;
+      
+      expect(() => {
+        decryptAccountName(invalid, testUserId);
+      }).toThrow("Decryption failed");
+    });
+
+    it("throws error for empty ciphertext", () => {
+      const invalid = `enc:${Buffer.from('a'.repeat(16)).toString('base64')}::${Buffer.from('auth').toString('base64')}`;
+      
+      expect(() => {
+        decryptAccountName(invalid, testUserId);
+      }).toThrow("Decryption failed");
     });
   });
 });
