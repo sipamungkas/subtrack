@@ -11,8 +11,33 @@ import {
   updateSubscriptionSchema,
 } from "../validators/subscription";
 import { encryptAccountName, decryptAccountName } from "../lib/crypto";
+import type { Subscription } from "../db/schema";
 
 const subscriptionRouter = new Hono();
+
+function safeDecryptAccountName(
+  encrypted: string,
+  userId: string
+): string {
+  try {
+    return decryptAccountName(encrypted, userId);
+  } catch {
+    console.error(`Failed to decrypt account name for user ${userId}`);
+    return "[Decryption failed]";
+  }
+}
+
+function safeEncryptAccountName(
+  plaintext: string,
+  userId: string
+): string | null {
+  try {
+    return encryptAccountName(plaintext, userId);
+  } catch (error) {
+    console.error(`Failed to encrypt account name for user ${userId}:`, error);
+    return null;
+  }
+}
 
 // All routes require authentication
 subscriptionRouter.use("*", requireAuth);
@@ -56,7 +81,7 @@ subscriptionRouter.get("/", async (c) => {
 
   const decryptedSubscriptions = userSubscriptions.map((sub) => ({
     ...sub,
-    accountName: decryptAccountName(sub.accountName, user.id),
+    accountName: safeDecryptAccountName(sub.accountName, user.id),
   }));
 
   return c.json({ data: decryptedSubscriptions });
@@ -143,7 +168,7 @@ subscriptionRouter.get("/stats", async (c) => {
     .slice(0, 5)
     .map((sub) => ({
       ...sub,
-      accountName: decryptAccountName(sub.accountName, user.id),
+      accountName: safeDecryptAccountName(sub.accountName, user.id),
     }));
 
   // Get exchange rates info
@@ -188,7 +213,7 @@ subscriptionRouter.get("/:id", async (c) => {
 
   const decryptedSubscription = {
     ...subscription[0],
-    accountName: decryptAccountName(subscription[0].accountName, user.id),
+    accountName: safeDecryptAccountName(subscription[0].accountName, user.id),
   };
 
   return c.json({ data: decryptedSubscription });
@@ -238,10 +263,20 @@ subscriptionRouter.post("/", async (c) => {
     );
   }
 
-  const encryptedAccountName = encryptAccountName(
+  const encryptedAccountName = safeEncryptAccountName(
     validation.data.accountName,
     user.id
   );
+
+  if (!encryptedAccountName) {
+    return c.json(
+      {
+        error: "ENCRYPTION_FAILED",
+        message: "Failed to encrypt account name. Please try again.",
+      },
+      500
+    );
+  }
 
   const [newSubscription] = await db
     .insert(subscriptions)
@@ -254,7 +289,7 @@ subscriptionRouter.post("/", async (c) => {
 
   const decryptedSubscription = {
     ...newSubscription,
-    accountName: decryptAccountName(newSubscription.accountName, user.id),
+    accountName: safeDecryptAccountName(newSubscription.accountName, user.id),
   };
 
   return c.json({ data: decryptedSubscription }, 201);
@@ -293,13 +328,28 @@ subscriptionRouter.put("/:id", async (c) => {
     );
   }
 
-  const updateData: any = { ...validation.data, updatedAt: new Date() };
+  let updateData: Partial<Subscription> = {
+    ...validation.data,
+    updatedAt: new Date(),
+  };
 
   if (validation.data.accountName) {
-    updateData.accountName = encryptAccountName(
+    const encryptedAccountName = safeEncryptAccountName(
       validation.data.accountName,
       user.id
     );
+
+    if (!encryptedAccountName) {
+      return c.json(
+        {
+          error: "ENCRYPTION_FAILED",
+          message: "Failed to encrypt account name. Please try again.",
+        },
+        500
+      );
+    }
+
+    updateData.accountName = encryptedAccountName;
   }
 
   const [updated] = await db
@@ -310,7 +360,7 @@ subscriptionRouter.put("/:id", async (c) => {
 
   const decryptedSubscription = {
     ...updated,
-    accountName: decryptAccountName(updated.accountName, user.id),
+    accountName: safeDecryptAccountName(updated.accountName, user.id),
   };
 
   return c.json({ data: decryptedSubscription });
@@ -389,7 +439,7 @@ subscriptionRouter.post("/:id/test-notification", async (c) => {
 
   const decryptedSubscription = {
     ...subscription,
-    accountName: decryptAccountName(subscription.accountName, user.id),
+    accountName: safeDecryptAccountName(subscription.accountName, user.id),
   };
 
   const message = formatReminderMessage(

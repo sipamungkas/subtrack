@@ -54,9 +54,9 @@ export function decryptAccountName(encrypted: string, userId: string): string {
   }
 
   const parts = encrypted.split(':');
-  
+
   if (parts.length !== 4) {
-    throw new Error('Invalid encrypted format: expected 4 colon-separated parts');
+    throw new Error('Invalid encrypted data');
   }
 
   const [, ivB64, ciphertextB64, authTagB64] = parts;
@@ -67,15 +67,13 @@ export function decryptAccountName(encrypted: string, userId: string): string {
     const ciphertext = Buffer.from(ciphertextB64, 'base64');
     const authTag = Buffer.from(authTagB64, 'base64');
 
-    const decipher = createDecipheriv(ALGORITHM, key, iv);
+    const decipher = createDecipheriv(ALGORITHM, key, iv, { authTagLength: 16 });
     decipher.setAuthTag(authTag);
 
     return decipher.update(ciphertext) + decipher.final('utf8');
   } catch (error) {
-    if (error instanceof Error) {
-      throw new Error(`Decryption failed: ${error.message}`);
-    }
-    throw new Error('Decryption failed: unknown error');
+    console.error('Decryption error:', error);
+    throw new Error('Invalid encrypted data');
   }
 }
 
