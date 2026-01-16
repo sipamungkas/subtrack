@@ -11,6 +11,18 @@ interface SubscriptionWithUser {
   user: typeof users.$inferSelect;
 }
 
+function safeDecryptAccountName(
+  encrypted: string,
+  userId: string
+): string {
+  try {
+    return decryptAccountName(encrypted, userId);
+  } catch {
+    console.error(`Failed to decrypt account name for user ${userId}`);
+    return "[Decryption failed]";
+  }
+}
+
 export function calculateNextRenewalDate(
   currentDate: Date,
   billingCycle: string,
@@ -169,7 +181,7 @@ export function formatReminderMessage(
   const emoji =
     daysUntilRenewal <= 1 ? "🚨" : daysUntilRenewal <= 3 ? "⚠️" : "🔔";
 
-  const decryptedAccountName = decryptAccountName(subscription.accountName, subscription.userId);
+  const decryptedAccountName = safeDecryptAccountName(subscription.accountName, subscription.userId);
 
   return (
     `${emoji} *Subscription Reminder*\n\n` +
