@@ -8,6 +8,7 @@ process.env.FRONTEND_URL = 'http://localhost:5173';
 process.env.TELEGRAM_BOT_TOKEN = 'test-bot-token';
 process.env.TELEGRAM_BOT_USERNAME = 'TestBot';
 process.env.NODE_ENV = 'test';
+process.env.ENCRYPTION_SECRET = '0123456789abcdef0123456789abcdef';
 
 // Global test setup
 beforeEach(() => {
