@@ -10,6 +10,7 @@ import {
   createSubscriptionSchema,
   updateSubscriptionSchema,
 } from "../validators/subscription";
+import { encryptAccountName, decryptAccountName } from "../lib/crypto";
 
 const subscriptionRouter = new Hono();
 
@@ -53,7 +54,12 @@ subscriptionRouter.get("/", async (c) => {
     .where(and(...conditions))
     .orderBy(subscriptions.renewalDate);
 
-  return c.json({ data: userSubscriptions });
+  const decryptedSubscriptions = userSubscriptions.map((sub) => ({
+    ...sub,
+    accountName: decryptAccountName(sub.accountName, user.id),
+  }));
+
+  return c.json({ data: decryptedSubscriptions });
 });
 
 // GET /api/subscriptions/stats - Get user's subscription statistics with currency conversion
@@ -128,12 +134,17 @@ subscriptionRouter.get("/stats", async (c) => {
   const thirtyDaysFromNow = new Date();
   thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
 
-  const upcomingRenewals = userSubscriptions.filter((sub) => {
-    const renewalDate = new Date(sub.renewalDate);
-    return renewalDate >= today && renewalDate <= thirtyDaysFromNow;
-  }).sort((a, b) =>
-    new Date(a.renewalDate).getTime() - new Date(b.renewalDate).getTime()
-  ).slice(0, 5);
+  const upcomingRenewals = userSubscriptions
+    .filter((sub) => {
+      const renewalDate = new Date(sub.renewalDate);
+      return renewalDate >= today && renewalDate <= thirtyDaysFromNow;
+    })
+    .sort((a, b) => new Date(a.renewalDate).getTime() - new Date(b.renewalDate).getTime())
+    .slice(0, 5)
+    .map((sub) => ({
+      ...sub,
+      accountName: decryptAccountName(sub.accountName, user.id),
+    }));
 
   // Get exchange rates info
   const { updatedAt: ratesUpdatedAt } = await getAllLatestRates();
@@ -175,7 +186,12 @@ subscriptionRouter.get("/:id", async (c) => {
     );
   }
 
-  return c.json({ data: subscription[0] });
+  const decryptedSubscription = {
+    ...subscription[0],
+    accountName: decryptAccountName(subscription[0].accountName, user.id),
+  };
+
+  return c.json({ data: decryptedSubscription });
 });
 
 // POST /api/subscriptions - Create new subscription
@@ -222,15 +238,26 @@ subscriptionRouter.post("/", async (c) => {
     );
   }
 
+  const encryptedAccountName = encryptAccountName(
+    validation.data.accountName,
+    user.id
+  );
+
   const [newSubscription] = await db
     .insert(subscriptions)
     .values({
       ...validation.data,
+      accountName: encryptedAccountName,
       userId: user.id,
     })
     .returning();
 
-  return c.json({ data: newSubscription }, 201);
+  const decryptedSubscription = {
+    ...newSubscription,
+    accountName: decryptAccountName(newSubscription.accountName, user.id),
+  };
+
+  return c.json({ data: decryptedSubscription }, 201);
 });
 
 // PUT /api/subscriptions/:id - Update subscription
@@ -266,16 +293,27 @@ subscriptionRouter.put("/:id", async (c) => {
     );
   }
 
+  const updateData: any = { ...validation.data, updatedAt: new Date() };
+
+  if (validation.data.accountName) {
+    updateData.accountName = encryptAccountName(
+      validation.data.accountName,
+      user.id
+    );
+  }
+
   const [updated] = await db
     .update(subscriptions)
-    .set({
-      ...validation.data,
-      updatedAt: new Date(),
-    })
+    .set(updateData)
     .where(eq(subscriptions.id, id))
     .returning();
 
-  return c.json({ data: updated });
+  const decryptedSubscription = {
+    ...updated,
+    accountName: decryptAccountName(updated.accountName, user.id),
+  };
+
+  return c.json({ data: decryptedSubscription });
 });
 
 // DELETE /api/subscriptions/:id - Soft delete subscription
@@ -349,8 +387,13 @@ subscriptionRouter.post("/:id/test-notification", async (c) => {
     (renewalDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
   );
 
+  const decryptedSubscription = {
+    ...subscription,
+    accountName: decryptAccountName(subscription.accountName, user.id),
+  };
+
   const message = formatReminderMessage(
-    subscription as typeof subscriptions.$inferSelect,
+    decryptedSubscription as typeof subscriptions.$inferSelect,
     daysUntilRenewal
   );
   const success = await sendTelegramMessage(userRecord.telegramChatId, message);
