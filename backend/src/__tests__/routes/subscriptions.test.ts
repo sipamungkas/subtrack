@@ -24,6 +24,12 @@ vi.mock('../../middleware/auth', () => ({
   },
 }));
 
+vi.mock('../../lib/crypto', () => ({
+  encryptAccountName: vi.fn((plaintext: string, userId: string) => `enc:${plaintext}`),
+  decryptAccountName: vi.fn((encrypted: string, userId: string) => encrypted),
+  isEncrypted: vi.fn((value: string) => value.startsWith('enc:')),
+}));
+
 import subscriptionRouter from '../../routes/subscriptions';
 import { db } from '../../db';
 

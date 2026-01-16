@@ -3,6 +3,7 @@ import { subscriptions, users, notificationLogs } from "../db/schema";
 import { eq, and, sql, lte, inArray } from "drizzle-orm";
 import { sendTelegramMessage } from "../lib/telegram";
 import { maskEmail } from "../lib/mask-email";
+import { decryptAccountName } from "../lib/crypto";
 import { addMonths, addQuarters, addYears, addDays, startOfDay, isBefore, format, differenceInDays } from "date-fns";
 
 interface SubscriptionWithUser {
@@ -168,6 +169,8 @@ export function formatReminderMessage(
   const emoji =
     daysUntilRenewal <= 1 ? "🚨" : daysUntilRenewal <= 3 ? "⚠️" : "🔔";
 
+  const decryptedAccountName = decryptAccountName(subscription.accountName, subscription.userId);
+
   return (
     `${emoji} *Subscription Reminder*\n\n` +
     `📌 *Service:* ${subscription.serviceName}\n` +
@@ -176,7 +179,7 @@ export function formatReminderMessage(
     }\n` +
     `💵 *Cost:* ${subscription.currency} ${subscription.cost}\n` +
     `💳 *Payment:* ${subscription.paymentMethod}\n` +
-    `👤 *Account:* ${subscription.accountName?.includes("@") ? maskEmail(subscription.accountName).replace(/\*/g, '\\*') : subscription.accountName}\n` +
+    `👤 *Account:* ${decryptedAccountName?.includes("@") ? maskEmail(decryptedAccountName).replace(/\*/g, '\\*') : decryptedAccountName}\n` +
     (subscription.notes ? `\n📝 *Notes:* ${subscription.notes}` : "") +
     `\n\n---\n💬 Need help? @SubnudgeSupport\\_bot | ✉️ support@subnudge.app`
   );

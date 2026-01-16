@@ -43,9 +43,13 @@ describe('Auth Middleware', () => {
       });
       const next = vi.fn();
 
+      (db.select as any).mockReturnValue(db);
+      (db.from as any).mockReturnValue(db);
+      (db.where as any).mockResolvedValue([{ preferredCurrency: 'USD' }]);
+
       await requireAuth(ctx, next);
 
-      expect(setFn).toHaveBeenCalledWith('user', mockSession.user);
+      expect(setFn).toHaveBeenCalledWith('user', { ...mockSession.user, preferredCurrency: 'USD' });
       expect(setFn).toHaveBeenCalledWith('session', mockSession.session);
       expect(next).toHaveBeenCalled();
     });

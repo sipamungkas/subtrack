@@ -22,6 +22,12 @@ vi.mock('../../lib/telegram', () => {
   };
 });
 
+vi.mock('../../lib/crypto', () => {
+  return {
+    decryptAccountName: vi.fn((encrypted: string, userId: string) => encrypted),
+  };
+});
+
 const { sendSubscriptionReminders, calculateNextRenewalDate, advancePassedRenewalDates } = await import('../../services/notifications');
 import { db } from '../../db';
 
