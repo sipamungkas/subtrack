@@ -22,7 +22,21 @@ vi.mock('../../lib/telegram', () => {
   };
 });
 
-const { sendSubscriptionReminders, calculateNextRenewalDate, advancePassedRenewalDates } = await import('../../services/notifications');
+vi.mock('../../lib/crypto', () => {
+  return {
+    decryptAccountName: vi.fn((encrypted: string, userId: string) => {
+      if (encrypted.startsWith('enc:THROW_ERROR')) {
+        throw new Error('Decryption failed');
+      }
+      if (!encrypted.startsWith('enc:')) {
+        return encrypted;
+      }
+      return encrypted.replace('enc:', '');
+    }),
+  };
+});
+
+const { sendSubscriptionReminders, calculateNextRenewalDate, advancePassedRenewalDates, formatReminderMessage } = await import('../../services/notifications');
 import { db } from '../../db';
 
 describe('Notification Service', () => {
@@ -95,5 +109,160 @@ describe('calculateNextRenewalDate', () => {
     const current = new Date('2026-01-15');
     const next = calculateNextRenewalDate(current, 'custom');
     expect(next.toISOString().split('T')[0]).toBe('2026-01-15');
+  });
+});
+
+describe('formatReminderMessage', () => {
+  it('should format message with encrypted email accountName', () => {
+    const subscription = {
+      id: 'sub-1',
+      userId: 'user-1',
+      serviceName: 'Netflix',
+      renewalDate: '2026-02-01',
+      cost: '15.99',
+      currency: 'USD',
+      paymentMethod: 'Credit Card',
+      accountName: 'enc:user@example.com',
+      reminderDays: [7, 3, 1],
+      billingCycle: 'monthly',
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      customIntervalDays: null,
+      notes: 'Family plan',
+    };
+
+    const message = formatReminderMessage(subscription, 3);
+
+    expect(message).toContain('Netflix');
+    expect(message).toContain('*Renews in:* 3 days');
+    expect(message).toContain('15.99');
+    expect(message).toContain('Credit Card');
+    expect(message).toContain('u\\*\\*\\*@example.com');
+    expect(message).toContain('Family plan');
+  });
+
+  it('should format message with plaintext accountName', () => {
+    const subscription = {
+      id: 'sub-1',
+      userId: 'user-1',
+      serviceName: 'Spotify',
+      renewalDate: '2026-02-01',
+      cost: '9.99',
+      currency: 'USD',
+      paymentMethod: 'PayPal',
+      accountName: 'my_spotify_account',
+      reminderDays: [7, 3, 1],
+      billingCycle: 'monthly',
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      customIntervalDays: null,
+      notes: null,
+    };
+
+    const message = formatReminderMessage(subscription, 7);
+
+    expect(message).toContain('Spotify');
+    expect(message).toContain('*Renews in:* 7 days');
+    expect(message).toContain('my_spotify_account');
+  });
+
+  it('should handle decryption failures gracefully', () => {
+    const subscription = {
+      id: 'sub-1',
+      userId: 'user-1',
+      serviceName: 'YouTube',
+      renewalDate: '2026-02-01',
+      cost: '11.99',
+      currency: 'USD',
+      paymentMethod: 'Credit Card',
+      accountName: 'enc:THROW_ERROR',
+      reminderDays: [7, 3, 1],
+      billingCycle: 'monthly',
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      customIntervalDays: null,
+      notes: null,
+    };
+
+    const message = formatReminderMessage(subscription, 1);
+
+    expect(message).toContain('YouTube');
+    expect(message).toContain('*Renews in:* 1 day');
+    expect(message).toContain('[Decryption failed]');
+  });
+
+  it('should use urgent emoji for 1 day remaining', () => {
+    const subscription = {
+      id: 'sub-1',
+      userId: 'user-1',
+      serviceName: 'Netflix',
+      renewalDate: '2026-02-01',
+      cost: '15.99',
+      currency: 'USD',
+      paymentMethod: 'Credit Card',
+      accountName: 'enc:user@example.com',
+      reminderDays: [7, 3, 1],
+      billingCycle: 'monthly',
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      customIntervalDays: null,
+      notes: null,
+    };
+
+    const message = formatReminderMessage(subscription, 1);
+
+    expect(message).toContain('🚨');
+  });
+
+  it('should use warning emoji for 3 days remaining', () => {
+    const subscription = {
+      id: 'sub-1',
+      userId: 'user-1',
+      serviceName: 'Netflix',
+      renewalDate: '2026-02-01',
+      cost: '15.99',
+      currency: 'USD',
+      paymentMethod: 'Credit Card',
+      accountName: 'enc:user@example.com',
+      reminderDays: [7, 3, 1],
+      billingCycle: 'monthly',
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      customIntervalDays: null,
+      notes: null,
+    };
+
+    const message = formatReminderMessage(subscription, 3);
+
+    expect(message).toContain('⚠️');
+  });
+
+  it('should use bell emoji for 7+ days remaining', () => {
+    const subscription = {
+      id: 'sub-1',
+      userId: 'user-1',
+      serviceName: 'Netflix',
+      renewalDate: '2026-02-01',
+      cost: '15.99',
+      currency: 'USD',
+      paymentMethod: 'Credit Card',
+      accountName: 'enc:user@example.com',
+      reminderDays: [7, 3, 1],
+      billingCycle: 'monthly',
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      customIntervalDays: null,
+      notes: null,
+    };
+
+    const message = formatReminderMessage(subscription, 7);
+
+    expect(message).toContain('🔔');
   });
 });

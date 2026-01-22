@@ -10,8 +10,34 @@ import {
   createSubscriptionSchema,
   updateSubscriptionSchema,
 } from "../validators/subscription";
+import { encryptAccountName, decryptAccountName } from "../lib/crypto";
+import type { Subscription } from "../db/schema";
 
 const subscriptionRouter = new Hono();
+
+function safeDecryptAccountName(
+  encrypted: string,
+  userId: string
+): string {
+  try {
+    return decryptAccountName(encrypted, userId);
+  } catch {
+    console.error(`Failed to decrypt account name for user ${userId}`);
+    return "[Decryption failed]";
+  }
+}
+
+function safeEncryptAccountName(
+  plaintext: string,
+  userId: string
+): string | null {
+  try {
+    return encryptAccountName(plaintext, userId);
+  } catch (error) {
+    console.error(`Failed to encrypt account name for user ${userId}:`, error);
+    return null;
+  }
+}
 
 // All routes require authentication
 subscriptionRouter.use("*", requireAuth);
@@ -53,7 +79,12 @@ subscriptionRouter.get("/", async (c) => {
     .where(and(...conditions))
     .orderBy(subscriptions.renewalDate);
 
-  return c.json({ data: userSubscriptions });
+  const decryptedSubscriptions = userSubscriptions.map((sub) => ({
+    ...sub,
+    accountName: safeDecryptAccountName(sub.accountName, user.id),
+  }));
+
+  return c.json({ data: decryptedSubscriptions });
 });
 
 // GET /api/subscriptions/stats - Get user's subscription statistics with currency conversion
@@ -128,12 +159,17 @@ subscriptionRouter.get("/stats", async (c) => {
   const thirtyDaysFromNow = new Date();
   thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
 
-  const upcomingRenewals = userSubscriptions.filter((sub) => {
-    const renewalDate = new Date(sub.renewalDate);
-    return renewalDate >= today && renewalDate <= thirtyDaysFromNow;
-  }).sort((a, b) =>
-    new Date(a.renewalDate).getTime() - new Date(b.renewalDate).getTime()
-  ).slice(0, 5);
+  const upcomingRenewals = userSubscriptions
+    .filter((sub) => {
+      const renewalDate = new Date(sub.renewalDate);
+      return renewalDate >= today && renewalDate <= thirtyDaysFromNow;
+    })
+    .sort((a, b) => new Date(a.renewalDate).getTime() - new Date(b.renewalDate).getTime())
+    .slice(0, 5)
+    .map((sub) => ({
+      ...sub,
+      accountName: safeDecryptAccountName(sub.accountName, user.id),
+    }));
 
   // Get exchange rates info
   const { updatedAt: ratesUpdatedAt } = await getAllLatestRates();
@@ -175,7 +211,12 @@ subscriptionRouter.get("/:id", async (c) => {
     );
   }
 
-  return c.json({ data: subscription[0] });
+  const decryptedSubscription = {
+    ...subscription[0],
+    accountName: safeDecryptAccountName(subscription[0].accountName, user.id),
+  };
+
+  return c.json({ data: decryptedSubscription });
 });
 
 // POST /api/subscriptions - Create new subscription
@@ -222,15 +263,36 @@ subscriptionRouter.post("/", async (c) => {
     );
   }
 
+  const encryptedAccountName = safeEncryptAccountName(
+    validation.data.accountName,
+    user.id
+  );
+
+  if (!encryptedAccountName) {
+    return c.json(
+      {
+        error: "ENCRYPTION_FAILED",
+        message: "Failed to encrypt account name. Please try again.",
+      },
+      500
+    );
+  }
+
   const [newSubscription] = await db
     .insert(subscriptions)
     .values({
       ...validation.data,
+      accountName: encryptedAccountName,
       userId: user.id,
     })
     .returning();
 
-  return c.json({ data: newSubscription }, 201);
+  const decryptedSubscription = {
+    ...newSubscription,
+    accountName: safeDecryptAccountName(newSubscription.accountName, user.id),
+  };
+
+  return c.json({ data: decryptedSubscription }, 201);
 });
 
 // PUT /api/subscriptions/:id - Update subscription
@@ -266,16 +328,42 @@ subscriptionRouter.put("/:id", async (c) => {
     );
   }
 
+  let updateData: Partial<Subscription> = {
+    ...validation.data,
+    updatedAt: new Date(),
+  };
+
+  if (validation.data.accountName) {
+    const encryptedAccountName = safeEncryptAccountName(
+      validation.data.accountName,
+      user.id
+    );
+
+    if (!encryptedAccountName) {
+      return c.json(
+        {
+          error: "ENCRYPTION_FAILED",
+          message: "Failed to encrypt account name. Please try again.",
+        },
+        500
+      );
+    }
+
+    updateData.accountName = encryptedAccountName;
+  }
+
   const [updated] = await db
     .update(subscriptions)
-    .set({
-      ...validation.data,
-      updatedAt: new Date(),
-    })
+    .set(updateData)
     .where(eq(subscriptions.id, id))
     .returning();
 
-  return c.json({ data: updated });
+  const decryptedSubscription = {
+    ...updated,
+    accountName: safeDecryptAccountName(updated.accountName, user.id),
+  };
+
+  return c.json({ data: decryptedSubscription });
 });
 
 // DELETE /api/subscriptions/:id - Soft delete subscription
@@ -349,8 +437,13 @@ subscriptionRouter.post("/:id/test-notification", async (c) => {
     (renewalDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
   );
 
+  const decryptedSubscription = {
+    ...subscription,
+    accountName: safeDecryptAccountName(subscription.accountName, user.id),
+  };
+
   const message = formatReminderMessage(
-    subscription as typeof subscriptions.$inferSelect,
+    decryptedSubscription as typeof subscriptions.$inferSelect,
     daysUntilRenewal
   );
   const success = await sendTelegramMessage(userRecord.telegramChatId, message);
