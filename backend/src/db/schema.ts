@@ -39,6 +39,7 @@ export const users = pgTable("users", {
   preferredCurrency: varchar("preferred_currency", { length: 3 })
     .notNull()
     .default("USD"),
+  newsletterEnabled: boolean("newsletter_enabled").notNull().default(true),
   role: roleEnum("role").notNull().default("user"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
