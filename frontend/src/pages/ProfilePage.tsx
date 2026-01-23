@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
+import { Switch } from '@/components/ui/switch'
 import { toast } from '@/hooks/use-toast'
 import { maskEmail } from '@/lib/utils/mask-email'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -41,6 +42,7 @@ export function ProfilePage() {
   const [telegramCode, setTelegramCode] = useState<{ code: string; message: string } | null>(null)
   const [copied, setCopied] = useState(false)
   const [preferredCurrency, setPreferredCurrency] = useState(profile?.preferredCurrency || 'USD')
+  const [newsletterEnabled, setNewsletterEnabled] = useState(profile?.newsletterEnabled ?? true)
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -48,6 +50,7 @@ export function ProfilePage() {
       await updateProfile.mutateAsync({
         name,
         preferredCurrency,
+        newsletterEnabled,
       })
       await refreshUser()
       toast({ title: 'Success', description: 'Profile updated successfully' })
@@ -165,6 +168,26 @@ export function ProfilePage() {
               <p className="text-xs text-muted-foreground">
                 Dashboard stats will be displayed in this currency
               </p>
+            </div>
+
+            <Separator className="my-4" />
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="newsletter" className="text-base">
+                    Newsletter & Reminders
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Receive subscription reminders and updates
+                  </p>
+                </div>
+                <Switch
+                  id="newsletter"
+                  checked={newsletterEnabled}
+                  onCheckedChange={setNewsletterEnabled}
+                />
+              </div>
             </div>
 
             <Button type="submit" disabled={updateProfile.isPending} className="gap-2">
