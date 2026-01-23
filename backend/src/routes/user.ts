@@ -24,6 +24,7 @@ userRouter.get('/profile', async (c) => {
       role: users.role,
       emailVerified: users.emailVerified,
       preferredCurrency: users.preferredCurrency,
+      newsletterEnabled: users.newsletterEnabled,
     })
     .from(users)
     .where(eq(users.id, user.id));
