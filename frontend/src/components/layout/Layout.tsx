@@ -2,6 +2,7 @@ import { Outlet } from 'react-router-dom'
 import { Navbar } from './Navbar'
 import { Footer } from './Footer'
 import { Toaster } from '@/components/ui/toaster'
+import { EmailVerificationBanner } from '@/components/EmailVerificationBanner'
 
 export function Layout() {
   return (
@@ -14,6 +15,7 @@ export function Layout() {
       </div>
 
       <Navbar />
+      <EmailVerificationBanner />
       <main className="container mx-auto px-4 py-8 flex-1">
         <Outlet />
       </main>

@@ -18,9 +18,10 @@ api.interceptors.response.use(
         window.location.href = '/login'
       }
     } else if (error.response?.data?.error === 'EMAIL_NOT_VERIFIED') {
-      // Trigger a UI update to show verification blocker
-      // The existing EmailVerificationBlocker handles this via auth context
-      window.dispatchEvent(new CustomEvent('email-not-verified'))
+      // Redirect to dashboard - the banner will prompt verification
+      if (!window.location.pathname.includes('/dashboard')) {
+        window.location.href = '/dashboard'
+      }
     }
     return Promise.reject(error)
   }

@@ -3,7 +3,7 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from './lib/query-client'
 import { AuthProvider, useAuth } from './lib/auth'
 import { Layout } from './components/layout/Layout'
-import { EmailVerificationBlocker } from './components/EmailVerificationBlocker'
+import { toast } from './hooks/use-toast'
 
 // Pages
 import { LoginPage } from './pages/LoginPage'
@@ -18,9 +18,10 @@ import { SubscriptionEditPage } from './pages/SubscriptionEditPage'
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage'
 import { AdminUsersPage } from './pages/admin/AdminUsersPage'
 import { Loader2 } from 'lucide-react'
+import { useEffect } from 'react'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading, isEmailVerified } = useAuth()
+  const { isAuthenticated, isLoading } = useAuth()
 
   if (isLoading) {
     return (
@@ -34,21 +35,45 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     return <Navigate to="/login" />
   }
 
-  // Show blocker for unverified users
-  if (!isEmailVerified) {
+  return <>{children}</>
+}
+
+// Route that requires email verification (e.g., subscription creation/editing)
+function VerifiedEmailRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, isLoading, isEmailVerified } = useAuth()
+
+  useEffect(() => {
+    if (!isLoading && isAuthenticated && !isEmailVerified) {
+      toast({
+        title: "Email Verification Required",
+        description: "Please verify your email to add or edit subscriptions.",
+        variant: "destructive",
+      })
+    }
+  }, [isLoading, isAuthenticated, isEmailVerified])
+
+  if (isLoading) {
     return (
-      <>
-        {children}
-        <EmailVerificationBlocker />
-      </>
+      <div className="flex items-center justify-center min-h-[80vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
     )
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />
+  }
+
+  // Redirect unverified users to dashboard
+  if (!isEmailVerified) {
+    return <Navigate to="/dashboard" />
   }
 
   return <>{children}</>
 }
 
 function AdminRoute({ children }: { children: React.ReactNode }) {
-  const { user, isAuthenticated, isLoading, isEmailVerified } = useAuth()
+  const { user, isAuthenticated, isLoading } = useAuth()
 
   if (isLoading) {
     return (
@@ -60,16 +85,6 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
 
   if (!isAuthenticated || user?.role !== 'admin') {
     return <Navigate to="/dashboard" />
-  }
-
-  // Show blocker for unverified admins
-  if (!isEmailVerified) {
-    return (
-      <>
-        {children}
-        <EmailVerificationBlocker />
-      </>
-    )
   }
 
   return <>{children}</>
@@ -175,17 +190,17 @@ function AppRoutes() {
         <Route
           path="/subscriptions/new"
           element={
-            <ProtectedRoute>
+            <VerifiedEmailRoute>
               <SubscriptionNewPage />
-            </ProtectedRoute>
+            </VerifiedEmailRoute>
           }
         />
         <Route
           path="/subscriptions/:id/edit"
           element={
-            <ProtectedRoute>
+            <VerifiedEmailRoute>
               <SubscriptionEditPage />
-            </ProtectedRoute>
+            </VerifiedEmailRoute>
           }
         />
         <Route
