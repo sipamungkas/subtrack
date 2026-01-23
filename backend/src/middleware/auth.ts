@@ -43,3 +43,31 @@ export const requireAdmin = async (c: Context, next: Next) => {
   c.set('session', session.session);
   await next();
 };
+
+export const requireVerifiedEmail = async (c: Context, next: Next) => {
+  const session = await auth.api.getSession({ headers: c.req.raw.headers });
+
+  if (!session) {
+    return c.json({ error: 'UNAUTHORIZED', message: 'Authentication required' }, 401);
+  }
+
+  // Check if user's email is verified
+  const [dbUser] = await db
+    .select({
+      emailVerified: users.emailVerified,
+      preferredCurrency: users.preferredCurrency,
+    })
+    .from(users)
+    .where(eq(users.id, session.user.id));
+
+  if (!dbUser?.emailVerified) {
+    return c.json({
+      error: 'EMAIL_NOT_VERIFIED',
+      message: 'Please verify your email to access this feature'
+    }, 403);
+  }
+
+  c.set('user', { ...session.user, preferredCurrency: dbUser?.preferredCurrency || 'USD' });
+  c.set('session', session.session);
+  await next();
+};
