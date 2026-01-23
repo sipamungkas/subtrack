@@ -88,7 +88,7 @@ export async function sendSubscriptionReminders(): Promise<void> {
 
     const today = startOfDay(new Date());
 
-    // Get all active subscriptions with users
+    // Get all active subscriptions with users who have newsletters enabled
     const activeSubscriptions = await db
       .select({
         subscription: subscriptions,
@@ -100,6 +100,7 @@ export async function sendSubscriptionReminders(): Promise<void> {
         and(
           eq(subscriptions.isActive, true),
           eq(users.isActive, true),
+          eq(users.newsletterEnabled, true),
           sql`${users.telegramChatId} IS NOT NULL`
         )
       );
