@@ -34,7 +34,7 @@ SubTrack is a subscription tracking web application that helps users remember wh
 
 1. **Subscription Management** - Track service name, renewal date, cost, payment method, account name
 2. **Telegram Notifications** - Configurable reminders before renewal dates
-3. **Subscription Limits** - Default 15 subscriptions per user, admin can upgrade
+3. **Subscription Limits** - Default 10 subscriptions per user, admin can upgrade
 4. **Admin Dashboard** - User management, limit upgrades, system stats
 
 ---
@@ -46,7 +46,7 @@ SubTrack is a subscription tracking web application that helps users remember wh
 - `email` - Unique, required
 - `name` - Optional
 - `telegram_chat_id` - Nullable, for Telegram notifications
-- `subscription_limit` - Integer, default 15
+- `subscription_limit` - Integer, default 10
 - `is_active` - Boolean, default true (for admin disable/enable)
 - `role` - Enum: 'user' | 'admin'
 - `created_at`, `updated_at` - Timestamps
@@ -215,7 +215,7 @@ Account: [account_name]
 **Profile**:
 - `ProfileForm` - Update name, email
 - `TelegramConnect` - Connection instructions and verification
-- `SubscriptionLimitBadge` - Display usage: "12/15 subscriptions"
+- `SubscriptionLimitBadge` - Display usage: "10/10 subscriptions"
 
 **Admin**:
 - `UserTable` - User list with management actions
@@ -298,7 +298,7 @@ VITE_TELEGRAM_BOT_USERNAME=SubTrackBot
 ```json
 {
   "error": "SUBSCRIPTION_LIMIT_REACHED",
-  "message": "You've reached your limit of 15 subscriptions",
+  "message": "You've reached your limit of 10 subscriptions",
   "details": { "current": 15, "limit": 15 }
 }
 ```

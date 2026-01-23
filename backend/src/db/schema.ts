@@ -35,7 +35,7 @@ export const users = pgTable("users", {
   emailVerified: boolean("email_verified").notNull().default(false),
   image: text("image"),
   telegramChatId: varchar("telegram_chat_id", { length: 255 }),
-  subscriptionLimit: integer("subscription_limit").notNull().default(15),
+  subscriptionLimit: integer("subscription_limit").notNull().default(10),
   isActive: boolean("is_active").notNull().default(true),
   preferredCurrency: varchar("preferred_currency", { length: 3 })
     .notNull()

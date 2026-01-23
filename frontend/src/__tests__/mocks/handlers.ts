@@ -7,7 +7,7 @@ export const mockUser: UserProfile = {
   email: 'test@example.com',
   name: 'Test User',
   telegramChatId: undefined,
-  subscriptionLimit: 15,
+  subscriptionLimit: 10,
   role: 'user',
   emailVerified: true,
   preferredCurrency: 'USD',
