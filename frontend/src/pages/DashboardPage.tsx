@@ -6,8 +6,8 @@ import {
   useTestSubscriptionNotification,
 } from "@/hooks/use-subscriptions";
 import { useProfile } from "@/hooks/use-user";
-import { useCurrencyConverter } from '@/hooks/use-currency-converter';
-import { formatCurrency } from '@/lib/utils/currency';
+import { useCurrencyConverter } from "@/hooks/use-currency-converter";
+import { formatCurrency } from "@/lib/utils/currency";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -130,7 +130,7 @@ function SubscriptionCard({
                   Renews{" "}
                   {new Date(subscription.renewalDate).toLocaleDateString(
                     "en-US",
-                    { month: "short", day: "numeric", year: "numeric" }
+                    { month: "short", day: "numeric", year: "numeric" },
                   )}
                 </span>
               </div>
@@ -239,14 +239,22 @@ export function DashboardPage() {
     );
   }
 
-  const preferredCurrency = profile?.preferredCurrency || 'USD';
+  const preferredCurrency = profile?.preferredCurrency || "USD";
 
   const convertedMonthlyCost = stats?.monthlyCost?.amount
-    ? convert(stats.monthlyCost.amount, stats.monthlyCost.currency, preferredCurrency)
+    ? convert(
+        stats.monthlyCost.amount,
+        stats.monthlyCost.currency,
+        preferredCurrency,
+      )
     : 0;
 
   const convertedYearlyCost = stats?.yearlyCost?.amount
-    ? convert(stats.yearlyCost.amount, stats.yearlyCost.currency, preferredCurrency)
+    ? convert(
+        stats.yearlyCost.amount,
+        stats.yearlyCost.currency,
+        preferredCurrency,
+      )
     : 0;
 
   return (
@@ -313,7 +321,7 @@ export function DashboardPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-4xl font-bold">
+            <p className="text-4xl font-bold break-words">
               {stats?.totalSubscriptions || 0}
             </p>
           </CardContent>
@@ -327,14 +335,16 @@ export function DashboardPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-4xl font-bold">
+            <p className="text-4xl font-bold break-words">
               {ratesLoading ? (
                 <Loader2 className="h-8 w-8 animate-spin" />
               ) : (
                 formatCurrency(convertedMonthlyCost, preferredCurrency)
               )}
             </p>
-            <p className="text-xs text-muted-foreground">{preferredCurrency} equivalent</p>
+            <p className="text-xs text-muted-foreground">
+              {preferredCurrency} equivalent
+            </p>
           </CardContent>
         </Card>
 
@@ -346,14 +356,16 @@ export function DashboardPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-4xl font-bold">
+            <p className="text-4xl font-bold break-words">
               {ratesLoading ? (
                 <Loader2 className="h-8 w-8 animate-spin" />
               ) : (
                 formatCurrency(convertedYearlyCost, preferredCurrency)
               )}
             </p>
-            <p className="text-xs text-muted-foreground">{preferredCurrency} equivalent</p>
+            <p className="text-xs text-muted-foreground">
+              {preferredCurrency} equivalent
+            </p>
           </CardContent>
         </Card>
 
