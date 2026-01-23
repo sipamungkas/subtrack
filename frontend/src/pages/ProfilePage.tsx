@@ -176,10 +176,10 @@ export function ProfilePage() {
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label htmlFor="newsletter" className="text-base">
-                    Newsletter & Reminders
+                    Newsletter
                   </Label>
                   <p className="text-sm text-muted-foreground">
-                    Receive subscription reminders and updates
+                    Receive product updates and tips
                   </p>
                 </div>
                 <Switch
