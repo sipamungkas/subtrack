@@ -7,23 +7,33 @@ interface EmailOptions {
   html?: string;
 }
 
-// Create transporter with SMTP configuration
-const createTransporter = () => {
+// Create a singleton transporter with connection pooling
+// This fixes Bun's first-connection timeout issue by reusing connections
+let transporter: ReturnType<typeof nodemailer.createTransport> | null = null;
+let transporterInitialized = false;
+
+const getTransporter = () => {
+  if (transporterInitialized) {
+    return transporter;
+  }
+
   const host = process.env.SMTP_HOST;
   const port = parseInt(process.env.SMTP_PORT || "587", 10);
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASS;
   const secure = process.env.SMTP_SECURE === "true" || port === 465;
 
+  transporterInitialized = true;
+
   if (!host || !user || !pass) {
     console.warn("SMTP not configured. Emails will be logged to console.");
     return null;
   }
 
-  // Log SMTP config for debugging (hide password)
+  // Log SMTP config once at initialization (hide password)
   console.log(`SMTP Config: host=${host}, port=${port}, secure=${secure}, user=${user}`);
 
-  return nodemailer.createTransport({
+  transporter = nodemailer.createTransport({
     host,
     port,
     secure, // true for 465, false for other ports
@@ -35,18 +45,24 @@ const createTransporter = () => {
       // Do not fail on invalid certs in development
       rejectUnauthorized: process.env.NODE_ENV === "production",
     },
+    // Use connection pooling to avoid Bun's first-connection timeout
+    pool: true,
+    maxConnections: 5,
+    maxMessages: 100,
     // Increase timeout for slower SMTP servers
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 10000,
+    connectionTimeout: 30000,
+    greetingTimeout: 30000,
+    socketTimeout: 30000,
   });
+
+  return transporter;
 };
 
 export async function sendEmail(options: EmailOptions): Promise<boolean> {
-  const transporter = createTransporter();
+  const emailTransporter = getTransporter();
   const from = process.env.SMTP_FROM || process.env.SMTP_USER || "noreply@example.com";
 
-  if (!transporter) {
+  if (!emailTransporter) {
     // Fallback: log to console in development
     console.log("=".repeat(50));
     console.log("📧 EMAIL (Console Fallback)");
@@ -59,7 +75,7 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
   }
 
   try {
-    await transporter.sendMail({
+    await emailTransporter.sendMail({
       from,
       to: options.to,
       subject: options.subject,
