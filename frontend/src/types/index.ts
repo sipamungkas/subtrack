@@ -59,6 +59,7 @@ export interface UserProfile {
   role: 'user' | 'admin'
   emailVerified: boolean
   preferredCurrency: 'USD' | 'EUR' | 'GBP' | 'IDR' | 'AUD' | 'SGD'
+  newsletterEnabled: boolean
 }
 
 export interface OTPResendStatus {

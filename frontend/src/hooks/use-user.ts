@@ -16,7 +16,7 @@ export function useUpdateProfile() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (input: { name?: string; email?: string; preferredCurrency?: 'USD' | 'EUR' | 'GBP' | 'IDR' | 'AUD' | 'SGD' }) => {
+    mutationFn: async (input: { name?: string; email?: string; preferredCurrency?: 'USD' | 'EUR' | 'GBP' | 'IDR' | 'AUD' | 'SGD'; newsletterEnabled?: boolean }) => {
       const { data } = await api.put<{ data: UserProfile }>('/api/user/profile', input)
       return data.data
     },
