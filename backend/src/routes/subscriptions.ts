@@ -3,7 +3,7 @@ import { formatReminderMessage } from "../services/notifications";
 import { convertAmount, getAllLatestRates } from "../services/currency";
 import { db } from "../db";
 import { subscriptions, users } from "../db/schema";
-import { requireVerifiedEmail } from "../middleware/auth";
+import { requireAuth, requireVerifiedEmail } from "../middleware/auth";
 import { eq, and, gte, sql, count, sum } from "drizzle-orm";
 import {
   subscriptionQuerySchema,
@@ -13,8 +13,9 @@ import {
 
 const subscriptionRouter = new Hono();
 
-// Apply email verification requirement to all subscription routes
-subscriptionRouter.use("*", requireVerifiedEmail);
+// Apply requireAuth to all routes (for authentication)
+// requireVerifiedEmail will be applied per-route for write operations only
+subscriptionRouter.use("*", requireAuth);
 
 // GET /api/subscriptions - List user's subscriptions
 subscriptionRouter.get("/", async (c) => {
@@ -178,8 +179,8 @@ subscriptionRouter.get("/:id", async (c) => {
   return c.json({ data: subscription[0] });
 });
 
-// POST /api/subscriptions - Create new subscription
-subscriptionRouter.post("/", async (c) => {
+// POST /api/subscriptions - Create new subscription (requires verified email)
+subscriptionRouter.post("/", requireVerifiedEmail, async (c) => {
   const user = c.get("user");
   const body = await c.req.json();
 
@@ -233,8 +234,8 @@ subscriptionRouter.post("/", async (c) => {
   return c.json({ data: newSubscription }, 201);
 });
 
-// PUT /api/subscriptions/:id - Update subscription
-subscriptionRouter.put("/:id", async (c) => {
+// PUT /api/subscriptions/:id - Update subscription (requires verified email)
+subscriptionRouter.put("/:id", requireVerifiedEmail, async (c) => {
   const user = c.get("user");
   const id = c.req.param("id");
   const body = await c.req.json();
@@ -278,8 +279,8 @@ subscriptionRouter.put("/:id", async (c) => {
   return c.json({ data: updated });
 });
 
-// DELETE /api/subscriptions/:id - Soft delete subscription
-subscriptionRouter.delete("/:id", async (c) => {
+// DELETE /api/subscriptions/:id - Soft delete subscription (requires verified email)
+subscriptionRouter.delete("/:id", requireVerifiedEmail, async (c) => {
   const user = c.get("user");
   const id = c.req.param("id");
 
@@ -305,8 +306,8 @@ subscriptionRouter.delete("/:id", async (c) => {
   return c.json({ message: "Subscription deleted successfully" });
 });
 
-// POST /api/subscriptions/:id/test-notification - Send test notification for subscription
-subscriptionRouter.post("/:id/test-notification", async (c) => {
+// POST /api/subscriptions/:id/test-notification - Send test notification for subscription (requires verified email)
+subscriptionRouter.post("/:id/test-notification", requireVerifiedEmail, async (c) => {
   const user = c.get("user");
   const id = c.req.param("id");
   const { sendTelegramMessage } = await import("../lib/telegram");
