@@ -3,7 +3,7 @@ import { formatReminderMessage } from "../services/notifications";
 import { convertAmount, getAllLatestRates } from "../services/currency";
 import { db } from "../db";
 import { subscriptions, users } from "../db/schema";
-import { requireAuth } from "../middleware/auth";
+import { requireVerifiedEmail } from "../middleware/auth";
 import { eq, and, gte, sql, count, sum } from "drizzle-orm";
 import {
   subscriptionQuerySchema,
@@ -13,8 +13,8 @@ import {
 
 const subscriptionRouter = new Hono();
 
-// All routes require authentication
-subscriptionRouter.use("*", requireAuth);
+// Apply email verification requirement to all subscription routes
+subscriptionRouter.use("*", requireVerifiedEmail);
 
 // GET /api/subscriptions - List user's subscriptions
 subscriptionRouter.get("/", async (c) => {
