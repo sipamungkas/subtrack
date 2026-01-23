@@ -1,8 +1,8 @@
 import { Hono } from 'hono';
 import { db } from '../db';
-import { users, subscriptions, notificationLogs } from '../db/schema';
+import { users, subscriptions, notificationLogs, emailLogs } from '../db/schema';
 import { requireAdmin } from '../middleware/auth';
-import { eq, count, sql, sum } from 'drizzle-orm';
+import { eq, count, sql, sum, desc } from 'drizzle-orm';
 import { updateUserLimitSchema, updateUserStatusSchema, paginationSchema } from '../validators/admin';
 import { sendTelegramMessage } from '../lib/telegram';
 import { sendEmail } from '../lib/email';
@@ -288,6 +288,36 @@ adminRouter.get('/stats', async (c) => {
           : 100,
       },
     }
+  });
+});
+
+// GET /api/admin/email-logs - View email send history
+adminRouter.get('/email-logs', async (c) => {
+  const limit = parseInt(c.req.query('limit') || '50');
+  const offset = parseInt(c.req.query('offset') || '0');
+  const status = c.req.query('status'); // 'sent', 'failed', or undefined for all
+
+  let query = db
+    .select()
+    .from(emailLogs)
+    .orderBy(desc(emailLogs.createdAt))
+    .limit(limit)
+    .offset(offset);
+
+  if (status === 'sent' || status === 'failed') {
+    query = query.where(eq(emailLogs.status, status));
+  }
+
+  const logs = await query;
+  const total = await db.select({ count: sql`count(*)` }).from(emailLogs);
+
+  return c.json({
+    data: logs,
+    pagination: {
+      limit,
+      offset,
+      total: Number(total[0]?.count || 0),
+    },
   });
 });
 
