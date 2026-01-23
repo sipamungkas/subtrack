@@ -9,6 +9,7 @@ import {
   pgEnum,
   decimal,
   date,
+  serial,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
@@ -142,6 +143,19 @@ export const currencyRates = pgTable("currency_rates", {
   rate: decimal("rate", { precision: 20, scale: 10 }).notNull(),
   fetchedAt: timestamp("fetched_at").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Email logs table for tracking email send attempts
+export const emailLogs = pgTable("email_logs", {
+  id: serial("id").primaryKey(),
+  email: varchar("email", { length: 255 }).notNull(),
+  emailType: varchar("email_type", { length: 50 }).notNull(), // 'otp', 'password-reset', etc.
+  status: varchar("status", { length: 20 }).notNull(), // 'sent', 'failed'
+  errorMessage: text("error_message"),
+  metadata: text("metadata"), // JSON string for additional data (OTP type, etc.)
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
 });
 
 // Relations
