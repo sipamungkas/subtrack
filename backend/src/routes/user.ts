@@ -64,6 +64,7 @@ userRouter.put('/profile', async (c) => {
       email: users.email,
       name: users.name,
       preferredCurrency: users.preferredCurrency,
+      newsletterEnabled: users.newsletterEnabled,
     });
 
   return c.json({ data: updated });
