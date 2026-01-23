@@ -56,7 +56,10 @@ export const auth = betterAuth({
       expiresIn: 300,
       sendVerificationOTP: async ({ email, otp, type }) => {
         console.log(`Sending OTP to ${email} for ${type}`);
-        await sendOTPEmail(email, otp);
+        const success = await sendOTPEmail(email, otp, type);
+        if (!success) {
+          console.error(`Failed to send OTP email to ${email} for ${type}`);
+        }
       },
     }),
   ],
